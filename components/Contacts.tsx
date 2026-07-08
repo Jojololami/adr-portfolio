@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+
+import { useForm } from "@formspree/react";
 import type { Metadata } from "next";
 import {
   Calendar,
@@ -8,7 +9,7 @@ import {
   Check,
 } from "lucide-react";
 import Section from "@/components/Section";
-import { FaInstagram, FaLinkedin, FaYoutube, FaTwitter } from "react-icons/fa6";
+import { FaInstagram, FaLinkedin, FaTiktok, FaTwitter } from "react-icons/fa6";
 
 export const metadata: Metadata = {
   title: "Contact | Aleem Aduragbemi",
@@ -40,7 +41,7 @@ const faqs = [
 ];
 
 export default function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+ const [state, handleSubmit] = useForm("xeebwyny");
 
   return (
     <>
@@ -67,10 +68,7 @@ export default function ContactPage() {
       <Section>
         <div className="grid gap-8 md:grid-cols-2">
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSubmitted(true);
-            }}
+            onSubmit={handleSubmit}
             className="surface-card flex flex-col gap-4 p-8"
           >
             <h2 className="font-display text-xl font-bold">
@@ -79,23 +77,34 @@ export default function ContactPage() {
 
             <Field label="Name">
               <input
-                required
-                className="input"
-                placeholder="Your name"
-              />
+  required
+  type="text"
+  name="name"
+  className="input"
+  placeholder="Your name"
+/>
             </Field>
 
             <Field label="Email">
               <input
-                required
-                type="email"
-                className="input"
-                placeholder="your@email.com"
-              />
+  required
+  type="email"
+  name="email"
+  className="input"
+  placeholder="your@email.com"
+/>
             </Field>
 
             <Field label="Service">
-              <select className="input">
+             <select
+  className="input"
+  name="service"
+  required
+  defaultValue=""
+>
+                <option value="" disabled>
+  Select a service
+</option>
                 <option>General Inquiry</option>
                 <option>AI Human Integration</option>
                 <option>SEO / GEO / AEO</option>
@@ -106,22 +115,27 @@ export default function ContactPage() {
             </Field>
 
             <Field label="Message">
-              <textarea
-                required
-                rows={5}
-                className="input resize-y"
-                placeholder="Tell me about your project or goals..."
-              />
+             <textarea
+  required
+  rows={5}
+  name="message"
+  className="input resize-y"
+  placeholder="Tell me about your project or goals..."
+/>
             </Field>
-
-            {submitted ? (
+  
+  {state.succeeded ? (        
               <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-foreground">
                 <Check className="h-5 w-5 text-accent2" />
                 Thanks! Your message has been received.
               </div>
             ) : (
-              <button className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow">
-                Send Message
+              <button
+  type="submit"
+  disabled={state.submitting}
+  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
+>
+                {state.submitting ? "Sending..." : "Send Message"}
                 <Send className="h-4 w-4" />
               </button>
             )}
@@ -140,9 +154,14 @@ export default function ContactPage() {
                 career goals, or digital strategy.
               </p>
 
-              <button className="mt-5 inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-elevated">
-                Book a Call
-              </button>
+              <a
+  href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call."
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mt-5 inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-elevated"
+>
+  Book a Call
+</a>
             </div>
 
             <div className="surface-card p-8">
@@ -152,20 +171,35 @@ export default function ContactPage() {
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {[
-                    { icon: FaTwitter, label: "Twitter / X" , href: "#",},
         
                   {
                     icon: FaLinkedin,
                     label: "LinkedIn",
-                    href: "#",
+                    href: "https://www.linkedin.com/in/aduragbemialeem",
+                    target: "_blank",
+                    rel:"noopener noreferrer"
                   },
-                  {
+ {
                     icon: FaInstagram,
                     label: "Instagram",
-                    href: "#",
+                    href: "https://www.instagram.com/a_aduragbemi/",
+                    target: "_blank",
+                    rel: "noopener noreferrer"
                   },
 
-                   { icon: FaYoutube, label: "YouTube", href: "#", },
+                  { icon: FaTiktok, label: "TikTok", 
+                    href:"https://www.tiktok.com/@the_beanie_guy",
+                    target: "_blank",
+                    rel: "noopener noreferrer"
+                   },
+
+                 
+
+                   { icon: FaTwitter, label: "Twitter / X" , 
+                    href: "https://x.com/Aduragbemi_AE",
+                    target: "_blank",
+                    rel: "noopener noreferrer"
+                   }
                 ].map((social) => (
                   <a
                     key={social.label}

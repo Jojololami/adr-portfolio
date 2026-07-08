@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import Section from "@/components/Section";
 import WaitlistForm from "@/components/WaitlistForm";
+import MediumBlog from "@/components/MediumBlog";
 
 export const metadata: Metadata = {
   title: "Services | ADR Hub",
@@ -111,9 +112,13 @@ export default function Services() {
             </div>
 
             <WaitlistForm />
+            
           </div>
         </div>
+        
       </Section>
+      <MediumBlog />
     </>
   );
 }
+  

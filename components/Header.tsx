@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { Menu, X } from "lucide-react";
+import { Menu, X, HouseIcon } from "lucide-react";
 
 const navItems = [
   { href: "/services", label: "Services" },
@@ -18,10 +18,8 @@ const Header = () => {
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2" aria-label="ADR Hub home">
+          <HouseIcon className="h-6 w-6" />
           
-          <span className="font-display text-lg font-bold tracking-tight">
-            🏠︎
-          </span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -78,17 +76,9 @@ const Header = () => {
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-3 text-base text-muted-foreground hover:bg-surface hover:text-foreground"
-            >
-              Contact
-            </Link>
-
-            <Link
-              href="/waitlist"
-              onClick={() => setOpen(false)}
               className="mt-2 inline-flex h-12 items-center justify-center rounded-xl bg-gradient-brand px-5 text-base font-semibold text-brand-foreground shadow-glow"
             >
-              Join Waitlist
+              Contact Me
             </Link>
           </nav>
         </div>

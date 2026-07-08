@@ -6,46 +6,52 @@ import Section from "./Section";
 const philosophy = [
   {
     icon: Target,
-    title: "Practical over theoretical",
+    title: "Professional excellence",
     desc: "Every lesson leads to something you can ship, share, or sell.",
   },
   {
     icon: Compass,
-    title: "AI-native by default",
-    desc: "AI is woven into every program — not an elective.",
+    title: "Premium Services",
+    desc: "(Free content review, seo audit, career mentorship.) AI is woven into every program — not an elective.",
   },
   {
     icon: BookOpen,
-    title: "Cohort + mentorship",
+    title: "News and education",
     desc: "Learn alongside peers with real human feedback.",
   },
   {
     icon: Users,
-    title: "Community-driven",
+    title: "Accountability and guidance",
     desc: "Accountability and opportunities come from the people around you.",
   },
 ];
 
 const roadmap = [
   {
-    q: "Q1",
-    title: "Launch site & Cohort 01",
+    q: "1",
+    title: "Contact Us",
     detail: "AI Content Creation begins. Waitlist opens.",
   },
   {
-    q: "Q2",
-    title: "Frontend + UI/UX programs",
+    q: "2",
+    title: "Free Audit",
     detail: "Second wave of cohorts launches.",
   },
   {
-    q: "Q3",
-    title: "LMS goes live",
+    q: "3",
+    title: "Deliver technical strategy for your brand",
     detail:
       "Student dashboards, lessons, certificates, and progress tracking.",
   },
   {
-    q: "Q4",
-    title: "Instructor network & memberships",
+    q: "4",
+    title: "Execution",
+    detail:
+      "Open instructor applications, native community, and paid plans.",
+  },
+  {
+    q: "5",
+    title: "Reports",
     detail:
       "Open instructor applications, native community, and paid plans.",
   },
@@ -72,7 +78,7 @@ const About = () => {
         </div>
       </section>
 
-      <Section eyebrow="Founder" title="The story behind ADR Hub.">
+      <Section eyebrow="ME" title="How I Got Here.">
         <div className="grid items-center gap-10 md:grid-cols-[1fr_2fr]">
           <Image
             src="/images/founder.jpg"
@@ -108,7 +114,7 @@ const About = () => {
         </div>
       </Section>
 
-      <Section eyebrow="Philosophy" title="How we teach.">
+      <Section eyebrow="Commitment" title="The things I do.">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {philosophy.map((item) => (
             <div key={item.title} className="surface-card p-6">
@@ -126,7 +132,7 @@ const About = () => {
         </div>
       </Section>
 
-      <Section eyebrow="Roadmap" title="Where we're going.">
+      <Section eyebrow="Roadmap" title="Move From Here to There.">
         <ol className="relative space-y-6 border-l border-border pl-8">
           {roadmap.map((item) => (
             <li key={item.q} className="surface-card relative p-6">
@@ -147,18 +153,22 @@ const About = () => {
       </Section>
 
       <Section
-        eyebrow="Instructor Network"
-        title="Built by working professionals."
+        eyebrow="Financial Box"
+        title="Partner With Us"
         subtitle="ADR Hub will host curated instructors—vetted for craft, communication, and a deep commitment to learner outcomes."
       >
         <Link
-          href="/contact"
+          href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call."
+  target="_blank"
+  rel="noopener noreferrer"
           className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
         >
-          Become an Instructor
+          Be a Part of Our Growth
           <ArrowRight className="h-4 w-4" />
         </Link>
       </Section>
+
+      
     </>
   );
 };

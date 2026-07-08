@@ -9,45 +9,45 @@ const Footer = () => {
           <FooterLink href="/community">Community</FooterLink>
         </FooterCol>
 
-        <FooterCol title="Aleem Aduragbemi">
+        <FooterCol title="Aduragbemi Aleem">
           <FooterLink href="/about">About Me</FooterLink>
           <FooterLink href="/contact">Contact Me</FooterLink>
         </FooterCol>
 
         <FooterCol title="Social">
           <a
-            href="#"
+            href="https://www.linkedin.com/in/aduragbemialeem" target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             LinkedIn
           </a>
 
           <a
-            href="#"
+            href="https://www.tiktok.com/@the_beanie_guy" target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            X
+            TikTok
           </a>
 
           <a
-            href="#"
+            href="https://www.instagram.com/a_aduragbemi/" target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Instagram
           </a>
 
           <a
-            href="#"
+            href="https://x.com/Aduragbemi_AE" target="_blank" rel="noopener noreferrer"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            TikTok
+            Twitter/X
           </a>
         </FooterCol>
       </div>
 
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-5xl justify-center px-6 py-6 text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} ADR Hub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Aduragbemi Aleem. All rights reserved.</p>
         </div>
       </div>
     </footer>

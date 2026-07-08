@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import MediumBlog from "@/components/MediumBlog"
 import {
   ArrowRight,
   Sparkles,
@@ -26,6 +27,7 @@ const Home = () => {
       <Programs />
       <WhyADR />
       <Community />
+      <MediumBlog />
       <FAQ />
       <FinalCTA />
     </>
@@ -74,7 +76,7 @@ function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Aduragbemi Aleem is a digital professional with a passion for creating innovative solutions that leverage technology to solve real-world problems. With expertise in content management, digital marketing, and AI integration, Aleem is dedicated to helping businesses and individuals thrive in the digital age.
+            Aduragbemi Aleem is a digital professional with a passion for creating innovative solutions that leverage technology to solve real-world problems. With expertise in content management, digital marketing, and AI integration, Aduragbemi is dedicated to helping businesses and individuals thrive in the digital age.
           </p>
         </div>
 
@@ -98,31 +100,31 @@ function Hero() {
 function Programs() {
   return (
     <Section
-      eyebrow="Services"
-      title="What Aduragbemi Does"
-      subtitle="Each services focuses on helping your business gain visibility, drive growth, and thrive in the digital age."
-    >
-      <div className="grid gap-6 md:grid-cols-3">
-        {programs.map((program) => (
-          <div
-            key={program.slug}
-            className="surface-card flex flex-col p-8 transition-all hover:-translate-y-1 hover:border-brand/50"
-          >
-            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand text-xl text-brand-foreground shadow-glow">
-              {program.icon}
-            </div>
+  eyebrow="Services"
+  title="What Aduragbemi Does"
+  subtitle="Each service focuses on helping your business gain visibility, drive growth, and thrive in the digital age."
+>
+  <div className="grid gap-6 md:grid-cols-2">
+    {programs.map((program) => (
+      <div
+        key={program.slug}
+        className="surface-card flex flex-col p-8 transition-all hover:-translate-y-1 hover:border-brand/50"
+      >
+        <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand text-xl text-brand-foreground shadow-glow">
+          {program.icon}
+        </div>
 
-            <h3 className="font-display text-xl font-semibold">
-              {program.title}
-            </h3>
+        <h3 className="font-display text-xl font-semibold">
+          {program.title}
+        </h3>
 
-            <p className="mt-2 text-sm text-muted-foreground">
-              {program.tagline}
-            </p>
-          </div>
-        ))}
+        <p className="mt-2 text-sm text-muted-foreground">
+          {program.tagline}
+        </p>
       </div>
-    </Section>
+    ))}
+  </div>
+</Section>
   );
 }
 
@@ -152,8 +154,7 @@ const reasons = [
 function WhyADR() {
   return (
     <Section
-      eyebrow="Why Aduragemi Aleem"
-      title="Expert-led, hands-on, and committed to your success."
+      title="Why Aduragbemi Aleem?"
       subtitle="I combine technical expertise, strategic thinking, and practical execution to deliver solutions that create real business impact."
      
 >
