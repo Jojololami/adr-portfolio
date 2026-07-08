@@ -69,33 +69,33 @@ const WaitlistForm = ({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className={`flex flex-col gap-3 sm:flex-row ${
-        compact ? "" : "max-w-md"
-      }`}
-    >
-      <input
-        type="email"
-        name="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        className="h-12 flex-1 rounded-xl border border-border bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
-      />
+   <form
+  onSubmit={onSubmit}
+  className={`flex flex-col gap-3 sm:flex-row ${
+    compact ? "" : "max-w-md"
+  }`}
+>
+ <input
+  type="email"
+  name="email"
+  required
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="your@email.com"
+  className="h-12 w-full min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 sm:text-sm"
+/>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loading ? "Joining..." : "Join Waitlist"}
+  <button
+    type="submit"
+    disabled={loading}
+    className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    {loading ? "Joining..." : "Join Waitlist"}
 
-        {!loading && <ArrowRight className="h-4 w-4" />}
-      </button>
-    </form>
-  );
+    {!loading && <ArrowRight className="h-4 w-4" />}
+  </button>
+</form>
+ );
 };
 
 export default WaitlistForm;
