@@ -155,10 +155,10 @@ const About = () => {
       <Section
         eyebrow="Financial Box"
         title="Partner With Us"
-        subtitle="ADR Hub will host curated instructors—vetted for craft, communication, and a deep commitment to learner outcomes."
+        subtitle="Support what we do by making a donation. Thank you for being part of the journey."
       >
         <Link
-          href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call."
+          href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem!%20I%20want%20to%20support%20what%20you%20do.%20Can%20you%20tell%20me%20how%20I%20can%20help%3F"
   target="_blank"
   rel="noopener noreferrer"
           className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
