@@ -82,7 +82,7 @@ const About = () => {
         <div className="grid items-center gap-10 md:grid-cols-[1fr_2fr]">
           <Image
             src="/images/ADR.jpeg"
-            alt="Adetayo, founder"
+            alt="ADR"
             width={768}
             height={896}
             className="aspect-[4/5] w-full rounded-2xl border border-border object-cover"
@@ -92,9 +92,9 @@ const About = () => {
             <p>
               Hi, I&apos;m{" "}
               <span className="font-semibold text-foreground">
-                Adetayo (ADR)
+                Aduragbemi Aleem
               </span>{" "}
-              — an AI Content Integrator and the founder of ADR Hub.
+              , an AI Content Integrator.
             </p>
 
             <p>
