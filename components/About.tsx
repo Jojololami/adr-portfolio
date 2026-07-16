@@ -81,7 +81,7 @@ const About = () => {
       <Section eyebrow="ME" title="How I Got Here.">
         <div className="grid items-center gap-10 md:grid-cols-[1fr_2fr]">
           <Image
-            src="/images/founder.jpg"
+            src="/images/ADR.jpeg"
             alt="Adetayo, founder"
             width={768}
             height={896}

@@ -84,7 +84,7 @@ function Hero() {
           <div className="absolute -inset-4 rounded-3xl bg-gradient-brand opacity-20 blur-3xl" />
 
           <Image
-            src="/images/founder.JPG"
+            src="/images/ADR.jpeg"
             alt="AI-powered learning visualization"
             width={1024}
             height={1024}
