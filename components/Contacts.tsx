@@ -1,6 +1,6 @@
 "use client";
 
-
+import { useEffect, useRef } from "react";
 import { useForm } from "@formspree/react";
 import type { Metadata } from "next";
 import {
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import Section from "@/components/Section";
 import { FaInstagram, FaLinkedin, FaTiktok, FaTwitter } from "react-icons/fa6";
+
+
 
 export const metadata: Metadata = {
   title: "Contact | Aleem Aduragbemi",
@@ -41,7 +43,14 @@ const faqs = [
 ];
 
 export default function ContactPage() {
- const [state, handleSubmit] = useForm("xeebwyny");
+ const [state, handleSubmit] = useForm("xaqrejbv");
+   const formRef = useRef<HTMLFormElement>(null);
+
+     useEffect(() => {
+    if (state.succeeded) {
+      formRef.current?.reset();
+    }
+  }, [state.succeeded]);
 
   return (
     <>
@@ -68,6 +77,7 @@ export default function ContactPage() {
       <Section>
         <div className="grid gap-8 md:grid-cols-2">
           <form
+            ref={formRef}
             onSubmit={handleSubmit}
             className="surface-card flex flex-col gap-4 p-8"
           >

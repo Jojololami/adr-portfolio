@@ -11,7 +11,7 @@ const perks = [
 ];
 
 export default function CommunityPage() {
-  const [state, handleSubmit] = useForm("mbdveogk");
+  const [state, handleSubmit] = useForm("xykrejjq");
 
   return (
     <section className="relative overflow-hidden">

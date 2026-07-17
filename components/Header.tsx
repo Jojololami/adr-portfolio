@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Menu, X, HouseIcon } from "lucide-react";
 
 const navItems = [
-  { href: "/services", label: "Services" },
-  { href: "/community", label: "Community" },
+ 
   { href: "/about", label: "About" },
+   { href: "/services", label: "Services" },
+  { href: "/community", label: "Community" },
 ] as const;
 
 const Header = () => {
   const [open, setOpen] = useState(false);
+    const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
@@ -27,7 +30,11 @@ const Header = () => {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className={`text-sm transition-colors ${
+  pathname === item.href
+    ? "text-foreground underline underline-offset-8 decoration-2 decoration-accent2"
+    : "text-muted-foreground hover:text-foreground"
+}`}
             >
               {item.label}
             </Link>
@@ -67,7 +74,11 @@ const Header = () => {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-base text-muted-foreground hover:bg-surface hover:text-foreground"
+              className={`rounded-lg px-3 py-3 text-base transition-colors ${
+  pathname === item.href
+    ? "bg-surface text-foreground"
+    : "text-muted-foreground hover:bg-surface hover:text-foreground"
+}`}
               >
                 {item.label}
               </Link>

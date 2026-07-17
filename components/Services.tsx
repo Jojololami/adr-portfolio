@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import Section from "@/components/Section";
 import WaitlistForm from "@/components/WaitlistForm";
 import MediumBlog from "@/components/MediumBlog";
+import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: "Services | ADR Hub",
@@ -55,9 +56,9 @@ export default function Services() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Whether you&apos;re building a business, growing your personal brand, or
-            advancing your career, I provide practical solutions designed to
-            help you achieve measurable results.
+            Whether you&apos;re building a business, growing your personal
+            brand, or advancing your career, I provide practical solutions
+            designed to help you achieve measurable results.
           </p>
         </div>
       </section>
@@ -68,24 +69,23 @@ export default function Services() {
         subtitle="Every service is tailored to help individuals and businesses leverage technology, improve visibility, and achieve sustainable growth."
       >
         <div className="grid gap-6 md:grid-cols-2">
-          {services.map((service) => (
-            <div
-              key={service.title}
-              className="surface-card flex flex-col rounded-2xl p-8 transition-all hover:-translate-y-1 hover:border-brand/50"
-            >
-              <h3 className="font-display text-2xl font-semibold">
-                {service.title}
-              </h3>
+          {services.map((service, index) => (
+            <Reveal key={service.title} delay={index * 0.15}>
+              <div className="surface-card flex flex-col rounded-2xl p-8 transition-all hover:-translate-y-1 hover:border-brand/50">
+                <h3 className="font-display text-2xl font-semibold">
+                  {service.title}
+                </h3>
 
-              <p className="mt-4 flex-1 text-muted-foreground">
-                {service.description}
-              </p>
+                <p className="mt-4 flex-1 text-muted-foreground">
+                  {service.description}
+                </p>
 
-              <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5">
-                Learn More
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
+                <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5">
+                  Learn More
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </Reveal>
           ))}
         </div>
       </Section>
@@ -112,13 +112,11 @@ export default function Services() {
             </div>
 
             <WaitlistForm />
-            
           </div>
         </div>
-        
       </Section>
+
       <MediumBlog />
     </>
   );
 }
-  

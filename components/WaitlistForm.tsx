@@ -24,7 +24,7 @@ const WaitlistForm = ({
     setLoading(true);
 
     try {
-      const response = await fetch("https://formspree.io/f/mbdveogk", {
+      const response = await fetch("https://formspree.io/f/xykrejjq", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

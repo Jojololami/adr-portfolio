@@ -19,17 +19,37 @@ import {
 } from "lucide-react";
 
 import Section from "@/components/Section";
+import Reveal from "@/components/Reveal";
+
 
 const Home = () => {
   return (
     <>
-      <Hero />
-      <Programs />
-      <WhyADR />
-      <Community />
-      <MediumBlog />
-      <FAQ />
-      <FinalCTA />
+    <Hero />      
+
+<Reveal>
+  <Programs />
+</Reveal>
+
+<Reveal>
+  <WhyADR />
+</Reveal>
+
+<Reveal>
+  <Community />
+</Reveal>
+
+<Reveal>
+  <MediumBlog />
+</Reveal>
+
+<Reveal>
+  <FAQ />
+</Reveal>
+
+<Reveal>
+  <FinalCTA />
+</Reveal>
     </>
   );
 };
