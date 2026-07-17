@@ -107,7 +107,7 @@ const About = () => {
               Everywhere I looked, I saw the same gap: schools weren&apos;t
               teaching digital skills, and online courses weren&apos;t built for
               African realities. So I&apos;m building the academy I wish existed
-              — practical, AI-first, mentor-led, and structured for real
+              — practical, AI-first, mentor-led, and structured for real-life
               careers.
             </p>
           </div>
