@@ -21,7 +21,7 @@ const Section = ({
 }: SectionProps) => {
   return (
     <section id={id} className={`py-20 md:py-28 ${className}`}>
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         {(eyebrow || title || subtitle) && (
           <div
             className={`mb-12 max-w-2xl ${

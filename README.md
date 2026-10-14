@@ -6,14 +6,26 @@ Personal brand and portfolio site for **Aleem Aduragbemi (ADR Hub)** — built t
 
 ## Features
 
-- **Home** — Hero intro, program highlights (AI Human Integrator, SEO/GEO/AEO Manager, Content Marketer, Career Coach), "Why ADR" section, community callout, Medium blog feed link, FAQ, and final CTA
-- **About** — Background and story
-- **Services** — Breakdown of offerings
-- **Community** — Mailing list waitlist signup (Formspree)
-- **Contact** — Contact form (Formspree) with FAQ and social links
+- **Home** — Positioning hero, current roles, selected work, what I do, writing samples, hiring CTA, Person JSON-LD
+- **Work** — Case studies (Eng-PidginEdu, Ridima, Web3) and writing samples
+- **About** — Bio, experience timeline, skills, education, certifications, "Partner With Us" link
+- **Contact** — Contact form (Formspree), WhatsApp discovery call, social links, FAQ
+- **Services** — Offerings (Learn More → Contact), waitlist signup (Formspree), FAQ accordion. Linked from the footer.
+- **Community** — Mailing list signup (Formspree). Linked from the footer.
+- Per-page titles, descriptions, canonical URLs and Open Graph tags
 - Scroll-triggered reveal animations (Framer Motion)
 - Fully responsive layout with a mobile nav drawer
-- Custom design system built on Tailwind CSS v4 (gradient brand accents, glow effects, custom fonts)
+- Design tokens in `app/globals.css` on Tailwind CSS v4 (light theme, deep green accent)
+
+## Editing content
+
+All portfolio copy lives in **`content/portfolio.ts`**. Unfinished items are written as `todo("…")` and show as yellow highlights on the site.
+
+```bash
+npm run check:content   # lists anything still to fill in; exits 1 until it's all done
+```
+
+To add the CV: put the file at `public/cv.pdf`, then set `cvPath: "/cv.pdf"` in `content/portfolio.ts`. Every "Download CV" button stays hidden until then, so no link can 404.
 
 ## Tech Stack
 
@@ -26,7 +38,7 @@ Personal brand and portfolio site for **Aleem Aduragbemi (ADR Hub)** — built t
 | Animation | Framer Motion |
 | Icons | `lucide-react`, `react-icons` |
 | Forms | [Formspree](https://formspree.io/) (`@formspree/react`) |
-| Fonts | Inter & Inter Tight (via `next/font/google`) |
+| Fonts | Bricolage Grotesque, Instrument Sans & JetBrains Mono (via `next/font/google`) |
 | Linting | ESLint 9 (`eslint-config-next`) |
 
 ## Project Structure
@@ -38,6 +50,7 @@ adr-portfolio/
 │   ├── community/page.tsx
 │   ├── contact/page.tsx
 │   ├── services/page.tsx
+│   ├── work/page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
@@ -45,6 +58,8 @@ adr-portfolio/
 │   ├── About.tsx
 │   ├── Community.tsx
 │   ├── Contacts.tsx
+│   ├── Faq.tsx
+│   ├── Fill.tsx
 │   ├── Footer.tsx
 │   ├── Header.tsx
 │   ├── Home.tsx
@@ -52,7 +67,12 @@ adr-portfolio/
 │   ├── Reveal.tsx
 │   ├── Section.tsx
 │   ├── Services.tsx
-│   └── WaitlistForm.tsx
+│   ├── WaitlistForm.tsx
+│   ├── Work.tsx
+│   └── ui.ts
+├── content/portfolio.ts
+├── lib/metadata.ts
+├── scripts/check-content.mjs
 └── public/images/
 ```
 
@@ -82,7 +102,7 @@ npm run lint    # run ESLint
 
 ## Forms
 
-The Community and Contact pages submit through Formspree endpoints. If you fork this project, swap in your own Formspree form IDs in `components/Community.tsx`, `components/WaitlistForm.tsx`, and `app/contact/page.tsx`.
+The Community, Services and Contact pages submit through Formspree endpoints. If you fork this project, swap in your own Formspree form IDs in `components/Community.tsx`, `components/WaitlistForm.tsx`, and `components/Contacts.tsx`.
 
 ## Deployment
 

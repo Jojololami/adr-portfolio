@@ -51,7 +51,8 @@ export default function CommunityPage() {
                 name="email"
                 required
                 placeholder="your@email.com"
-                className="h-12 flex-1 rounded-xl border border-border bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+                aria-label="Email address"
+                className="h-12 flex-1 rounded-xl border border-input bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
               />
 
               <button

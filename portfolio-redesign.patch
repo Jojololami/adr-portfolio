@@ -1,0 +1,2923 @@
+From 33a634132cd12cf71a014d35789822691bb08ebc Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 14 Oct 2026 11:01:38 +0000
+Subject: [PATCH] Redesign portfolio for recruiters while preserving existing
+ functionality
+
+- Restyle via design tokens in globals.css (token names unchanged, values
+  switched to the new light theme); swap fonts via next/font
+- Add /work page with case studies; rewrite Home and About content
+- Move all copy into content/portfolio.ts with todo() placeholders and
+  an `npm run check:content` script
+- Header: Work/About/Contact; mobile drawer and active-link logic kept,
+  aria-expanded/aria-current added
+- Footer: links Services and Community (kept live), all socials kept
+- Contact: same Formspree form (xaqrejbv), fields, reset and states;
+  adds "Job opportunity" topic; social links now open in a new tab
+- Services: Learn More links to /contact; FAQ accordion moved here from Home
+- Per-page metadata now applies (was silently ignored in components),
+  plus canonical URLs, Open Graph and Person JSON-LD
+- Input borders meet 3:1 contrast
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012Ls8GSLtdmfpf42uCDiLxU
+---
+ README.md                   |  38 +++-
+ app/about/page.tsx          |  17 +-
+ app/community/page.tsx      |  17 +-
+ app/contact/page.tsx        |  14 +-
+ app/globals.css             | 130 ++++++-----
+ app/layout.tsx              |  45 +++-
+ app/page.tsx                |  56 +++--
+ app/services/page.tsx       |  17 +-
+ app/work/page.tsx           |  23 ++
+ components/About.tsx        | 284 +++++++++++-------------
+ components/Community.tsx    |   3 +-
+ components/Contacts.tsx     | 373 +++++++++++++------------------
+ components/Faq.tsx          |  58 +++++
+ components/Fill.tsx         |  16 ++
+ components/Footer.tsx       |  95 ++++----
+ components/Header.tsx       | 110 +++++-----
+ components/Home.tsx         | 425 +++++++++++++-----------------------
+ components/Section.tsx      |   2 +-
+ components/Services.tsx     |  51 +++--
+ components/WaitlistForm.tsx |   3 +-
+ components/Work.tsx         | 150 +++++++++++++
+ components/ui.ts            |  32 +++
+ content/portfolio.ts        | 293 +++++++++++++++++++++++++
+ lib/metadata.ts             |  31 +++
+ package.json                |   3 +-
+ scripts/check-content.mjs   |  30 +++
+ 26 files changed, 1442 insertions(+), 874 deletions(-)
+ create mode 100644 app/work/page.tsx
+ create mode 100644 components/Faq.tsx
+ create mode 100644 components/Fill.tsx
+ create mode 100644 components/Work.tsx
+ create mode 100644 components/ui.ts
+ create mode 100644 content/portfolio.ts
+ create mode 100644 lib/metadata.ts
+ create mode 100644 scripts/check-content.mjs
+
+diff --git a/README.md b/README.md
+index ee1d6c5..d4a5f6e 100644
+--- a/README.md
++++ b/README.md
+@@ -6,14 +6,26 @@ Personal brand and portfolio site for **Aleem Aduragbemi (ADR Hub)** — built t
+ 
+ ## Features
+ 
+-- **Home** — Hero intro, program highlights (AI Human Integrator, SEO/GEO/AEO Manager, Content Marketer, Career Coach), "Why ADR" section, community callout, Medium blog feed link, FAQ, and final CTA
+-- **About** — Background and story
+-- **Services** — Breakdown of offerings
+-- **Community** — Mailing list waitlist signup (Formspree)
+-- **Contact** — Contact form (Formspree) with FAQ and social links
++- **Home** — Positioning hero, current roles, selected work, what I do, writing samples, hiring CTA, Person JSON-LD
++- **Work** — Case studies (Eng-PidginEdu, Ridima, Web3) and writing samples
++- **About** — Bio, experience timeline, skills, education, certifications, "Partner With Us" link
++- **Contact** — Contact form (Formspree), WhatsApp discovery call, social links, FAQ
++- **Services** — Offerings (Learn More → Contact), waitlist signup (Formspree), FAQ accordion. Linked from the footer.
++- **Community** — Mailing list signup (Formspree). Linked from the footer.
++- Per-page titles, descriptions, canonical URLs and Open Graph tags
+ - Scroll-triggered reveal animations (Framer Motion)
+ - Fully responsive layout with a mobile nav drawer
+-- Custom design system built on Tailwind CSS v4 (gradient brand accents, glow effects, custom fonts)
++- Design tokens in `app/globals.css` on Tailwind CSS v4 (light theme, deep green accent)
++
++## Editing content
++
++All portfolio copy lives in **`content/portfolio.ts`**. Unfinished items are written as `todo("…")` and show as yellow highlights on the site.
++
++```bash
++npm run check:content   # lists anything still to fill in; exits 1 until it's all done
++```
++
++To add the CV: put the file at `public/cv.pdf`, then set `cvPath: "/cv.pdf"` in `content/portfolio.ts`. Every "Download CV" button stays hidden until then, so no link can 404.
+ 
+ ## Tech Stack
+ 
+@@ -26,7 +38,7 @@ Personal brand and portfolio site for **Aleem Aduragbemi (ADR Hub)** — built t
+ | Animation | Framer Motion |
+ | Icons | `lucide-react`, `react-icons` |
+ | Forms | [Formspree](https://formspree.io/) (`@formspree/react`) |
+-| Fonts | Inter & Inter Tight (via `next/font/google`) |
++| Fonts | Bricolage Grotesque, Instrument Sans & JetBrains Mono (via `next/font/google`) |
+ | Linting | ESLint 9 (`eslint-config-next`) |
+ 
+ ## Project Structure
+@@ -38,6 +50,7 @@ adr-portfolio/
+ │   ├── community/page.tsx
+ │   ├── contact/page.tsx
+ │   ├── services/page.tsx
++│   ├── work/page.tsx
+ │   ├── globals.css
+ │   ├── layout.tsx
+ │   └── page.tsx
+@@ -45,6 +58,8 @@ adr-portfolio/
+ │   ├── About.tsx
+ │   ├── Community.tsx
+ │   ├── Contacts.tsx
++│   ├── Faq.tsx
++│   ├── Fill.tsx
+ │   ├── Footer.tsx
+ │   ├── Header.tsx
+ │   ├── Home.tsx
+@@ -52,7 +67,12 @@ adr-portfolio/
+ │   ├── Reveal.tsx
+ │   ├── Section.tsx
+ │   ├── Services.tsx
+-│   └── WaitlistForm.tsx
++│   ├── WaitlistForm.tsx
++│   ├── Work.tsx
++│   └── ui.ts
++├── content/portfolio.ts
++├── lib/metadata.ts
++├── scripts/check-content.mjs
+ └── public/images/
+ ```
+ 
+@@ -82,7 +102,7 @@ npm run lint    # run ESLint
+ 
+ ## Forms
+ 
+-The Community and Contact pages submit through Formspree endpoints. If you fork this project, swap in your own Formspree form IDs in `components/Community.tsx`, `components/WaitlistForm.tsx`, and `app/contact/page.tsx`.
++The Community, Services and Contact pages submit through Formspree endpoints. If you fork this project, swap in your own Formspree form IDs in `components/Community.tsx`, `components/WaitlistForm.tsx`, and `components/Contacts.tsx`.
+ 
+ ## Deployment
+ 
+diff --git a/app/about/page.tsx b/app/about/page.tsx
+index 9222060..1bce82a 100644
+--- a/app/about/page.tsx
++++ b/app/about/page.tsx
+@@ -1,14 +1,25 @@
+-"use client";
+ import Header from "@/components/Header";
+ import Footer from "@/components/Footer";
+ import About from "@/components/About";
++import { pageMetadata } from "@/lib/metadata";
++
++// No "use client" here: this page has no client-side state, and being a
++// server component is what lets it export metadata.
++export const metadata = pageMetadata({
++  title: "About",
++  description:
++    "SEO, AEO and GEO strategist with experience across fintech, Web3 and AI content, and hands-on NLP research on the Eng-PidginEdu dataset.",
++  path: "/about",
++});
+ 
+ export default function AboutPage() {
+   return (
+     <>
+       <Header />
+-      <About />
++      <main className="flex-1">
++        <About />
++      </main>
+       <Footer />
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/community/page.tsx b/app/community/page.tsx
+index d5fef55..d98904f 100644
+--- a/app/community/page.tsx
++++ b/app/community/page.tsx
+@@ -1,13 +1,24 @@
+ import Header from "@/components/Header";
+ import Footer from "@/components/Footer";
+ import Community from "@/components/Community";
++import { pageMetadata } from "@/lib/metadata";
+ 
+-export default function AboutPage() {
++// Kept live at the owner's request; linked from the footer, not the main nav.
++export const metadata = pageMetadata({
++  title: "Community",
++  description:
++    "Join Aduragbemi Aleem's mailing list for practical insights on AI, SEO, content and careers.",
++  path: "/community",
++});
++
++export default function CommunityPage() {
+   return (
+     <>
+       <Header />
+-      <Community />
++      <main className="flex-1">
++        <Community />
++      </main>
+       <Footer />
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/contact/page.tsx b/app/contact/page.tsx
+index b094e22..459b1ae 100644
+--- a/app/contact/page.tsx
++++ b/app/contact/page.tsx
+@@ -1,13 +1,23 @@
+ import Header from "@/components/Header";
+ import Footer from "@/components/Footer";
+ import Contacts from "@/components/Contacts";
++import { pageMetadata } from "@/lib/metadata";
++
++export const metadata = pageMetadata({
++  title: "Contact",
++  description:
++    "Get in touch with Aduragbemi Aleem about SEO, content strategy and AI-search roles, projects or collaborations.",
++  path: "/contact",
++});
+ 
+ export default function Contact() {
+   return (
+     <>
+       <Header />
+-      <Contacts />
++      <main className="flex-1">
++        <Contacts />
++      </main>
+       <Footer />
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/globals.css b/app/globals.css
+index 0baf6f2..a90734b 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -63,69 +63,85 @@
+   --color-accent2: var(--accent2);
+   --color-surface: var(--surface);
+   --color-surface-elevated: var(--surface-elevated);
+-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+-  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
++  --color-brand-dark: var(--brand-dark);
++  --color-brand-soft: var(--brand-soft);
++  --color-placeholder: var(--placeholder);
++  --color-placeholder-foreground: var(--placeholder-foreground);
++  /* Font families come from next/font variables set on <html> in app/layout.tsx */
++  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
++  --font-display: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
++  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, monospace;
+ }
+ 
+ :root {
+-  /* ADR Hub — Burgundy-dominant design system */
++  /* Portfolio redesign — light ground, ink text, deep green accent.
++     Token NAMES are unchanged so every existing utility keeps working;
++     only the values changed. Contrast checked: body text 7.9:1,
++     accent text 7.8:1, white on accent 8.1:1, input borders 3.3:1. */
+   --radius: 0.875rem;
+ 
+   /* Base surfaces */
+-  --background: oklch(0.16 0.03 15);
+-  --foreground: oklch(0.96 0.005 60);
+-  --surface: oklch(0.24 0.05 15);
+-  --surface-elevated: oklch(0.30 0.07 15);
+-
+-  /* Secondary: white/cream cards */
+-  --card: oklch(0.995 0.003 60);
+-  --card-foreground: oklch(0.18 0.04 15);
+-  --popover: oklch(0.995 0.003 60);
+-  --popover-foreground: oklch(0.18 0.04 15);
+-
+-  /* Brand: burgundy */
+-  --brand: oklch(0.48 0.18 15);
+-  --brand-foreground: oklch(0.99 0.003 60);
+-
+-  /* Accent: warm gold */
+-  --accent2: oklch(0.78 0.12 75);
+-
+-  --primary: oklch(0.99 0.003 60);
+-  --primary-foreground: oklch(0.18 0.04 15);
+-  --secondary: oklch(0.28 0.07 15);
+-  --secondary-foreground: oklch(0.96 0.005 60);
+-  --muted: oklch(0.28 0.05 15);
+-  --muted-foreground: oklch(0.60 0.03 20);
+-  --accent: oklch(0.35 0.08 15);
+-  --accent-foreground: oklch(0.96 0.005 60);
++  --background: oklch(0.984 0.004 106.5);
++  --foreground: oklch(0.204 0.007 258.4);
++  --surface: oklch(1 0 0);
++  --surface-elevated: oklch(0.956 0.007 115.7);
++
++  /* Cards */
++  --card: oklch(1 0 0);
++  --card-foreground: oklch(0.204 0.007 258.4);
++  --popover: oklch(1 0 0);
++  --popover-foreground: oklch(0.204 0.007 258.4);
++
++  /* Brand: deep green */
++  --brand: oklch(0.42 0.075 174.2);
++  --brand-dark: oklch(0.324 0.056 174.8);
++  --brand-soft: oklch(0.946 0.012 170.3);
++  --brand-foreground: oklch(1 0 0);
++
++  /* Eyebrows and icon accents (previously gold) */
++  --accent2: oklch(0.42 0.075 174.2);
++
++  --primary: oklch(0.204 0.007 258.4);
++  --primary-foreground: oklch(1 0 0);
++  --secondary: oklch(0.956 0.007 115.7);
++  --secondary-foreground: oklch(0.204 0.007 258.4);
++  --muted: oklch(0.956 0.007 115.7);
++  --muted-foreground: oklch(0.426 0.015 259.8);
++  --accent: oklch(0.946 0.012 170.3);
++  --accent-foreground: oklch(0.324 0.056 174.8);
+   --destructive: oklch(0.55 0.22 25);
+   --destructive-foreground: oklch(0.99 0 0);
+-  --border: oklch(0.40 0.05 15);
+-  --input: oklch(0.24 0.04 15);
+-  --ring: oklch(0.78 0.12 75);
+-
+-  --chart-1: oklch(0.48 0.18 15);
+-  --chart-2: oklch(0.78 0.12 75);
+-  --chart-3: oklch(0.65 0.16 20);
+-  --chart-4: oklch(0.85 0.06 30);
+-  --chart-5: oklch(0.32 0.08 15);
+-
+-  --sidebar: oklch(0.20 0.04 15);
+-  --sidebar-foreground: oklch(0.90 0.02 30);
+-  --sidebar-primary: oklch(0.48 0.18 15);
+-  --sidebar-primary-foreground: oklch(0.99 0.003 60);
+-  --sidebar-accent: oklch(0.28 0.06 15);
+-  --sidebar-accent-foreground: oklch(0.96 0.005 60);
+-  --sidebar-border: oklch(0.35 0.05 15);
+-  --sidebar-ring: oklch(0.78 0.12 75);
+-
+-  /* Gradients & effects */
+-  --gradient-brand: linear-gradient(135deg, oklch(0.42 0.16 15) 0%, oklch(0.62 0.16 22) 100%);
+-  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.55 0.16 15 / 0.35), transparent 60%);
+-  --gradient-surface: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.97 0.008 50) 100%);
+-  --shadow-glow: 0 8px 40px oklch(0.85 0.06 30 / 0.20);
+-  --shadow-card: 0 8px 32px oklch(0.10 0.02 15 / 0.45);
++  --border: oklch(0.917 0.007 115.7);
++  --input: oklch(0.637 0.015 124);
++  --ring: oklch(0.42 0.075 174.2);
++
++  /* Fill-in markers for unfinished content */
++  --placeholder: oklch(0.96 0.05 89.8);
++  --placeholder-foreground: oklch(0.399 0.082 84.4);
++
++  --chart-1: oklch(0.42 0.075 174.2);
++  --chart-2: oklch(0.65 0.12 60);
++  --chart-3: oklch(0.55 0.1 250);
++  --chart-4: oklch(0.75 0.08 140);
++  --chart-5: oklch(0.32 0.05 174.8);
++
++  --sidebar: oklch(1 0 0);
++  --sidebar-foreground: oklch(0.204 0.007 258.4);
++  --sidebar-primary: oklch(0.42 0.075 174.2);
++  --sidebar-primary-foreground: oklch(1 0 0);
++  --sidebar-accent: oklch(0.956 0.007 115.7);
++  --sidebar-accent-foreground: oklch(0.204 0.007 258.4);
++  --sidebar-border: oklch(0.917 0.007 115.7);
++  --sidebar-ring: oklch(0.42 0.075 174.2);
++
++  /* Effects — flattened for the cleaner look. The utilities that use these
++     (bg-gradient-brand, text-gradient, bg-hero-glow, shadow-glow, surface-card)
++     are kept so the Services and Community pages restyle without edits. */
++  --gradient-brand: linear-gradient(var(--brand), var(--brand));
++  --gradient-hero: none;
++  --gradient-surface: linear-gradient(var(--card), var(--card));
++  --shadow-glow: 0 1px 2px oklch(0.204 0.007 258.4 / 0.08);
++  --shadow-card: 0 1px 3px oklch(0.204 0.007 258.4 / 0.08);
+ }
+ 
+ .dark {
+@@ -160,7 +176,7 @@
+   height: 44px;
+   width: 100%;
+   border-radius: 12px;
+-  border: 1px solid var(--color-border);
++  border: 1px solid var(--color-input);
+   background: var(--surface);
+   padding: 0 14px;
+   color: var(--color-foreground);
+@@ -180,7 +196,7 @@ textarea.input {
+ .input:focus {
+   outline: none;
+   border-color: var(--brand);
+-  box-shadow: 0 0 0 3px rgb(255 193 7 / 20%);
++  box-shadow: 0 0 0 3px oklch(0.42 0.075 174.2 / 0.25);
+ }
+ 
+ @utility text-gradient {
+diff --git a/app/layout.tsx b/app/layout.tsx
+index c3ff1be..0a67fd8 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -1,26 +1,49 @@
+-import type { Metadata } from "next";
+-import { Inter, Inter_Tight } from "next/font/google";
++import type { Metadata, Viewport } from "next";
++import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+ import "./globals.css";
+-import type { Viewport } from "next";
++import { site } from "@/content/portfolio";
+ 
+ export const viewport: Viewport = {
+   width: "device-width",
+   initialScale: 1,
+ };
+ 
+-const inter = Inter({
++// Variable names are read by the @theme block in globals.css
++// (--font-sans, --font-display and --font-mono point at these).
++const body = Instrument_Sans({
+   subsets: ["latin"],
+-  variable: "--font-sans",
++  variable: "--font-body",
+ });
+ 
+-const interTight = Inter_Tight({
++const heading = Bricolage_Grotesque({
+   subsets: ["latin"],
+-  variable: "--font-display",
++  variable: "--font-heading",
++});
++
++const code = JetBrains_Mono({
++  subsets: ["latin"],
++  weight: ["500"],
++  variable: "--font-code",
+ });
+ 
+ export const metadata: Metadata = {
+-  title: "ADR Portfolio",
+-  description: "Built by Jojololami",
++  metadataBase: new URL(site.url),
++  title: {
++    default: `${site.name} | ${site.role}`,
++    template: `%s | ${site.name}`,
++  },
++  description: site.description,
++  openGraph: {
++    type: "website",
++    siteName: site.name,
++    title: `${site.name} | ${site.role}`,
++    description: site.description,
++    url: "/",
++    images: [{ url: "/images/ADR.jpeg", alt: site.name }],
++  },
++  twitter: {
++    card: "summary",
++  },
+ };
+ 
+ export default function RootLayout({
+@@ -31,11 +54,11 @@ export default function RootLayout({
+   return (
+     <html
+       lang="en"
+-      className={`${inter.variable} ${interTight.variable} h-full antialiased`}
++      className={`${body.variable} ${heading.variable} ${code.variable} h-full antialiased`}
+     >
+       <body className="min-h-full flex flex-col">
+         {children}
+       </body>
+     </html>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/page.tsx b/app/page.tsx
+index 1b3d966..af9cd15 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -1,18 +1,48 @@
+-import React from 'react';
+-import Header from '../components/Header';
+-import Footer from '../components/Footer';
+-import Home from '../components/Home';
++import type { Metadata } from "next";
++import Header from "@/components/Header";
++import Footer from "@/components/Footer";
++import Home from "@/components/Home";
++import { links, site } from "@/content/portfolio";
++
++export const metadata: Metadata = {
++  alternates: { canonical: "/" },
++};
++
++// Structured data so search engines and AI assistants can identify the person behind the site.
++const personJsonLd = {
++  "@context": "https://schema.org",
++  "@type": "Person",
++  name: site.name,
++  jobTitle: site.role,
++  url: site.url,
++  email: `mailto:${site.email}`,
++  image: `${site.url}/images/ADR.jpeg`,
++  address: { "@type": "PostalAddress", addressLocality: "Lagos", addressCountry: "NG" },
++  alumniOf: { "@type": "CollegeOrUniversity", name: "Obafemi Awolowo University" },
++  knowsAbout: [
++    "Search Engine Optimization",
++    "Answer Engine Optimization",
++    "Generative Engine Optimization",
++    "Content Strategy",
++    "Natural Language Processing",
++  ],
++  sameAs: [links.linkedin, links.medium],
++};
++
+ const page = () => {
+   return (
+-    <div>
+-      
++    <>
++      <script
++        type="application/ld+json"
++        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
++      />
+       <Header />
+-      <Home />
+-
++      <main className="flex-1">
++        <Home />
++      </main>
+       <Footer />
++    </>
++  );
++};
+ 
+-    </div>
+-  )
+-}
+-
+-export default page
+\ No newline at end of file
++export default page;
+diff --git a/app/services/page.tsx b/app/services/page.tsx
+index 642b89b..f3e331a 100644
+--- a/app/services/page.tsx
++++ b/app/services/page.tsx
+@@ -1,13 +1,24 @@
+ import Header from "@/components/Header";
+ import Footer from "@/components/Footer";
+ import Services from "@/components/Services";
++import { pageMetadata } from "@/lib/metadata";
+ 
+-export default function AboutPage() {
++// Kept live at the owner's request; linked from the footer, not the main nav.
++export const metadata = pageMetadata({
++  title: "Services",
++  description:
++    "AI integration, SEO, AEO and GEO, content marketing and career coaching services from Aduragbemi Aleem.",
++  path: "/services",
++});
++
++export default function ServicesPage() {
+   return (
+     <>
+       <Header />
+-      <Services  />
++      <main className="flex-1">
++        <Services />
++      </main>
+       <Footer />
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/app/work/page.tsx b/app/work/page.tsx
+new file mode 100644
+index 0000000..195dfce
+--- /dev/null
++++ b/app/work/page.tsx
+@@ -0,0 +1,23 @@
++import Header from "@/components/Header";
++import Footer from "@/components/Footer";
++import Work from "@/components/Work";
++import { pageMetadata } from "@/lib/metadata";
++
++export const metadata = pageMetadata({
++  title: "Work",
++  description:
++    "Case studies in SEO, AI search and NLP: the Eng-PidginEdu translation dataset, fintech SEO content at Ridima, and Web3 launch content.",
++  path: "/work",
++});
++
++export default function WorkPage() {
++  return (
++    <>
++      <Header />
++      <main className="flex-1">
++        <Work />
++      </main>
++      <Footer />
++    </>
++  );
++}
+diff --git a/components/About.tsx b/components/About.tsx
+index 04a50e6..2496ed8 100644
+--- a/components/About.tsx
++++ b/components/About.tsx
+@@ -1,176 +1,144 @@
+ import Image from "next/image";
+-import Link from "next/link";
+-import { ArrowRight, Target, Compass, BookOpen, Users } from "lucide-react";
+-import Section from "./Section";
+-
+-const philosophy = [
+-  {
+-    icon: Target,
+-    title: "Professional excellence",
+-    desc: "Every lesson leads to something you can ship, share, or sell.",
+-  },
+-  {
+-    icon: Compass,
+-    title: "Premium Services",
+-    desc: "(Free content review, seo audit, career mentorship.) AI is woven into every program — not an elective.",
+-  },
+-  {
+-    icon: BookOpen,
+-    title: "News and education",
+-    desc: "Learn alongside peers with real human feedback.",
+-  },
+-  {
+-    icon: Users,
+-    title: "Accountability and guidance",
+-    desc: "Accountability and opportunities come from the people around you.",
+-  },
+-];
+-
+-const roadmap = [
+-  {
+-    q: "1",
+-    title: "Contact Us",
+-    detail: "AI Content Creation begins. Waitlist opens.",
+-  },
+-  {
+-    q: "2",
+-    title: "Free Audit",
+-    detail: "Second wave of cohorts launches.",
+-  },
+-  {
+-    q: "3",
+-    title: "Deliver technical strategy for your brand",
+-    detail:
+-      "Student dashboards, lessons, certificates, and progress tracking.",
+-  },
+-  {
+-    q: "4",
+-    title: "Execution",
+-    detail:
+-      "Open instructor applications, native community, and paid plans.",
+-  },
+-  {
+-    q: "5",
+-    title: "Reports",
+-    detail:
+-      "Open instructor applications, native community, and paid plans.",
+-  },
+-];
++import { ArrowRight } from "lucide-react";
++
++import Reveal from "@/components/Reveal";
++import Fill from "@/components/Fill";
++import { button, container, displayHeading, sectionHeading } from "@/components/ui";
++import {
++  certifications,
++  education,
++  experience,
++  languages,
++  links,
++  site,
++  skills,
++} from "@/content/portfolio";
+ 
+ const About = () => {
+   return (
+     <>
+-      <section className="relative overflow-hidden">
+-        <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
+-
+-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center md:py-32">
+-
+-          <h1 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-6xl">
+-            Meet {" "}
+-            <span className="text-gradient">Aduragemi Aleem</span>
+-          </h1>
+-
+-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+-            Adura is a Africa&apos;s next generation of digital professionals by
+-            making world-class, practical digital skills accessible,
+-            structured, and career-ready.
+-          </p>
++      <section className={`${container} flex flex-col gap-10 py-12 md:flex-row md:gap-14 md:py-20`}>
++        <div className="min-w-0 md:flex-[3]">
++          <h1 className={`${displayHeading} mb-7`}>About me</h1>
++          <div className="space-y-4">
++            <p className="text-lg md:text-[19px]">
++              Most tech products don&apos;t struggle because they lack innovation. They struggle
++              because people don&apos;t understand them, and increasingly, because AI tools like
++              ChatGPT and Google AI Overviews don&apos;t understand them either.
++            </p>
++            <p className="text-muted-foreground">
++              I&apos;m an SEO, AEO and GEO strategist. For <Fill value={site.yearsOfExperience} />{" "}
++              years I&apos;ve written and managed content for fintech, Web3 and AI companies, with
++              one goal: making sure the right people find the product, whether they search on
++              Google or ask a chatbot.
++            </p>
++            <p className="text-muted-foreground">
++              I&apos;ve also worked on the other side of AI. As a co-author of Eng-PidginEdu, I
++              helped build the data pipeline behind an English–Nigerian Pidgin translation dataset,
++              from scraping and cleaning text in Python to reviewing model output by hand. That
++              work showed me how language models process text, which is what AEO and GEO depend on.
++            </p>
++          </div>
+         </div>
+-      </section>
+-
+-      <Section eyebrow="ME" title="How I Got Here.">
+-        <div className="grid items-center gap-10 md:grid-cols-[1fr_2fr]">
++        <div className="min-w-0 md:flex-[2]">
+           <Image
+             src="/images/ADR.jpeg"
+-            alt="ADR"
+-            width={768}
+-            height={896}
+-            className="aspect-[4/5] w-full rounded-2xl border border-border object-cover"
++            alt={`Portrait of ${site.name}`}
++            width={720}
++            height={1080}
++            sizes="(min-width: 768px) 40vw, 100vw"
++            className="aspect-[4/5] max-h-[440px] w-full rounded-2xl border border-border object-cover object-top"
+           />
++        </div>
++      </section>
+ 
+-          <div className="space-y-4 text-lg text-muted-foreground">
+-            <p>
+-              Hi, I&apos;m{" "}
+-              <span className="font-semibold text-foreground">
+-                Aduragbemi Aleem
+-              </span>{" "}
+-              , an AI Content Integrator.
+-            </p>
+-
+-            <p>
+-              I&apos;ve spent the last few years inside the AI content stack —
+-              building, integrating, and teaching the workflows that creators
+-              and brands use to ship at speed.
+-            </p>
+-
+-            <p>
+-              Everywhere I looked, I saw the same gap: schools weren&apos;t
+-              teaching digital skills, and online courses weren&apos;t built for
+-              African realities. So I&apos;m building the academy I wish existed
+-              — practical, AI-first, mentor-led, and structured for real-life
+-              careers.
++      <Reveal>
++        <section className={`${container} py-8 md:py-12`}>
++          <h2 className={`${sectionHeading} mb-6`}>Experience</h2>
++          <ol className="border-t border-border">
++            {experience.map((e) => (
++              <li
++                key={`${e.org}-${e.dates}`}
++                className="flex flex-col gap-1 border-b border-border py-5 md:flex-row md:gap-8"
++              >
++                <span className="pt-0.5 font-mono text-sm text-muted-foreground md:w-52 md:shrink-0">
++                  {e.dates}
++                </span>
++                <div className="min-w-0">
++                  <p className="font-semibold">
++                    <Fill value={e.role} /> · {e.org}
++                  </p>
++                  <p className="mt-0.5 text-muted-foreground">{e.text}</p>
++                </div>
++              </li>
++            ))}
++          </ol>
++        </section>
++      </Reveal>
++
++      <Reveal>
++        <section className={`${container} py-8 md:py-12`}>
++          <h2 className={`${sectionHeading} mb-7`}>Skills</h2>
++          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
++            {skills.map((s) => (
++              <div key={s.title} className="border-t-2 border-foreground pt-4">
++                <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
++                <p className="text-muted-foreground">{s.text}</p>
++              </div>
++            ))}
++          </div>
++        </section>
++      </Reveal>
++
++      <Reveal>
++        <section className={`${container} grid gap-10 py-8 md:grid-cols-3 md:py-12`}>
++          <div>
++            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Education</h2>
++            <p className="font-semibold">{education.degree}</p>
++            <p className="text-muted-foreground">{education.school}</p>
++          </div>
++          <div>
++            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Certifications</h2>
++            <ul className="list-disc pl-5 text-muted-foreground">
++              {certifications.map((c) => (
++                <li key={c}>{c}</li>
++              ))}
++            </ul>
++          </div>
++          <div>
++            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Languages</h2>
++            <p className="text-muted-foreground">
++              {languages.map((l, i) => (
++                <Fill key={i} value={l} />
++              ))}
+             </p>
+           </div>
+-        </div>
+-      </Section>
+-
+-      <Section eyebrow="Commitment" title="The things I do.">
+-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+-          {philosophy.map((item) => (
+-            <div key={item.title} className="surface-card p-6">
+-              <item.icon className="h-6 w-6 text-accent2" />
+-
+-              <h3 className="mt-4 font-display text-base font-semibold">
+-                {item.title}
+-              </h3>
+-
+-              <p className="mt-2 text-sm text-muted-foreground">
+-                {item.desc}
++        </section>
++      </Reveal>
++
++      {/* Kept from the previous About page at the owner's request. */}
++      <Reveal>
++        <section className={`${container} pb-16 pt-8 md:pb-24 md:pt-12`}>
++          <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-6 md:flex-row md:items-center md:justify-between md:p-10">
++            <div>
++              <h2 className="font-display text-2xl font-bold">Partner With Us</h2>
++              <p className="mt-2 max-w-xl text-muted-foreground">
++                Support what we do by making a donation. Thank you for being part of the journey.
+               </p>
+             </div>
+-          ))}
+-        </div>
+-      </Section>
+-
+-      <Section eyebrow="Roadmap" title="Move From Here to There.">
+-        <ol className="relative space-y-6 border-l border-border pl-8">
+-          {roadmap.map((item) => (
+-            <li key={item.q} className="surface-card relative p-6">
+-              <span className="absolute -left-[2.6rem] top-6 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-brand-foreground shadow-glow">
+-                {item.q}
+-              </span>
+-
+-              <h3 className="font-display text-lg font-semibold">
+-                {item.title}
+-              </h3>
+-
+-              <p className="mt-1 text-sm text-muted-foreground">
+-                {item.detail}
+-              </p>
+-            </li>
+-          ))}
+-        </ol>
+-      </Section>
+-
+-      <Section
+-        eyebrow="Financial Box"
+-        title="Partner With Us"
+-        subtitle="Support what we do by making a donation. Thank you for being part of the journey."
+-      >
+-        <Link
+-          href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem!%20I%20want%20to%20support%20what%20you%20do.%20Can%20you%20tell%20me%20how%20I%20can%20help%3F"
+-  target="_blank"
+-  rel="noopener noreferrer"
+-          className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
+-        >
+-          Be a Part of Our Growth
+-          <ArrowRight className="h-4 w-4" />
+-        </Link>
+-      </Section>
+-
+-      
++            <a
++              href={links.whatsappSupport}
++              target="_blank"
++              rel="noopener noreferrer"
++              className={`${button({ variant: "outline", size: "md" })} shrink-0`}
++            >
++              Be a Part of Our Growth <ArrowRight className="h-4 w-4" aria-hidden="true" />
++            </a>
++          </div>
++        </section>
++      </Reveal>
+     </>
+   );
+ };
+ 
+-export default About;
+\ No newline at end of file
++export default About;
+diff --git a/components/Community.tsx b/components/Community.tsx
+index 5e9e355..357d2d8 100644
+--- a/components/Community.tsx
++++ b/components/Community.tsx
+@@ -51,7 +51,8 @@ export default function CommunityPage() {
+                 name="email"
+                 required
+                 placeholder="your@email.com"
+-                className="h-12 flex-1 rounded-xl border border-border bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
++                aria-label="Email address"
++                className="h-12 flex-1 rounded-xl border border-input bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+               />
+ 
+               <button
+diff --git a/components/Contacts.tsx b/components/Contacts.tsx
+index a856914..e53f9ad 100644
+--- a/components/Contacts.tsx
++++ b/components/Contacts.tsx
+@@ -2,26 +2,14 @@
+ 
+ import { useEffect, useRef } from "react";
+ import { useForm } from "@formspree/react";
+-import type { Metadata } from "next";
+-import {
+-  Calendar,
+-  Send,
+-  Check,
+-} from "lucide-react";
++import { Calendar, Send, Check } from "lucide-react";
+ import Section from "@/components/Section";
+ import { FaInstagram, FaLinkedin, FaTiktok, FaTwitter } from "react-icons/fa6";
++import { button, container, displayHeading, label } from "@/components/ui";
++import { links, site } from "@/content/portfolio";
+ 
+-
+-
+-export const metadata: Metadata = {
+-  title: "Contact | Aleem Aduragbemi",
+-  description:
+-    "Let's discuss your project, career goals, or business needs.",
+-  openGraph: {
+-    title: "Contact Aleem Aduragbemi",
+-    description: "Get in touch for collaborations, consulting, or coaching.",
+-  },
+-};
++// Page metadata now lives in app/contact/page.tsx. Next.js ignored it here,
++// because metadata is only read from page and layout files.
+ 
+ const faqs = [
+   {
+@@ -42,11 +30,19 @@ const faqs = [
+   },
+ ];
+ 
++const socials = [
++  { icon: FaLinkedin, label: "LinkedIn", href: links.linkedin },
++  { icon: FaInstagram, label: "Instagram", href: links.instagram },
++  { icon: FaTiktok, label: "TikTok", href: links.tiktok },
++  { icon: FaTwitter, label: "Twitter / X", href: links.x },
++];
++
+ export default function ContactPage() {
+- const [state, handleSubmit] = useForm("xaqrejbv");
+-   const formRef = useRef<HTMLFormElement>(null);
++  // Unchanged: same Formspree form ID, same field names, same states.
++  const [state, handleSubmit] = useForm("xaqrejbv");
++  const formRef = useRef<HTMLFormElement>(null);
+ 
+-     useEffect(() => {
++  useEffect(() => {
+     if (state.succeeded) {
+       formRef.current?.reset();
+     }
+@@ -54,220 +50,147 @@ export default function ContactPage() {
+ 
+   return (
+     <>
+-      <section className="relative overflow-hidden">
+-        <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
+-
+-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center md:py-28">
+-          <p className="text-xs font-semibold uppercase tracking-widest text-accent2">
+-            Contact
+-          </p>
+-
+-          <h1 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-6xl">
+-            Let&apos;s <span className="text-gradient">work together.</span>
+-          </h1>
+-
+-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+-            Whether you need AI integration, content strategy, SEO support,
+-            career coaching, or simply want to discuss an idea, I &apos;d love to hear
+-            from you.
++      <section className={`${container} grid gap-12 py-12 md:grid-cols-2 md:gap-16 md:py-20`}>
++        <div className="min-w-0">
++          <h1 className={`${displayHeading} mb-5`}>Let&apos;s talk</h1>
++          <p className="mb-8 text-lg text-muted-foreground md:text-[19px]">
++            I&apos;m open to SEO, content strategy and AI-search roles at tech and AI companies.
++            I&apos;m also available for selected freelance projects, collaborations and coaching.
+           </p>
+-        </div>
+-      </section>
+-
+-      <Section>
+-        <div className="grid gap-8 md:grid-cols-2">
+-          <form
+-            ref={formRef}
+-            onSubmit={handleSubmit}
+-            className="surface-card flex flex-col gap-4 p-8"
+-          >
+-            <h2 className="font-display text-xl font-bold">
+-              Send a Message
+-            </h2>
+-
+-            <Field label="Name">
+-              <input
+-  required
+-  type="text"
+-  name="name"
+-  className="input"
+-  placeholder="Your name"
+-/>
+-            </Field>
+-
+-            <Field label="Email">
+-              <input
+-  required
+-  type="email"
+-  name="email"
+-  className="input"
+-  placeholder="your@email.com"
+-/>
+-            </Field>
+-
+-            <Field label="Service">
+-             <select
+-  className="input"
+-  name="service"
+-  required
+-  defaultValue=""
+->
+-                <option value="" disabled>
+-  Select a service
+-</option>
+-                <option>General Inquiry</option>
+-                <option>AI Human Integration</option>
+-                <option>SEO / GEO / AEO</option>
+-                <option>Content Marketing</option>
+-                <option>Career Coaching</option>
+-                <option>Collaboration</option>
+-              </select>
+-            </Field>
+-
+-            <Field label="Message">
+-             <textarea
+-  required
+-  rows={5}
+-  name="message"
+-  className="input resize-y"
+-  placeholder="Tell me about your project or goals..."
+-/>
+-            </Field>
+-  
+-  {state.succeeded ? (        
+-              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-foreground">
+-                <Check className="h-5 w-5 text-accent2" />
+-                Thanks! Your message has been received.
+-              </div>
+-            ) : (
+-              <button
+-  type="submit"
+-  disabled={state.submitting}
+-  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
+->
+-                {state.submitting ? "Sending..." : "Send Message"}
+-                <Send className="h-4 w-4" />
+-              </button>
+-            )}
+-          </form>
+-
+-          <div className="space-y-6">
+-            <div className="surface-card p-8">
+-              <Calendar className="h-6 w-6 text-accent2" />
+ 
+-              <h2 className="mt-4 font-display text-xl font-bold">
+-                Book a Discovery Call
+-              </h2>
+-
+-              <p className="mt-2 text-sm text-muted-foreground">
+-                Schedule a one-on-one session to discuss your business,
+-                career goals, or digital strategy.
+-              </p>
+-
+-              <a
+-  href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call."
+-  target="_blank"
+-  rel="noopener noreferrer"
+-  className="mt-5 inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-elevated"
+->
+-  Book a Call
+-</a>
++          <dl className="mb-8 flex flex-col gap-4">
++            <div>
++              <dt className={label}>Email</dt>
++              <dd>
++                <a
++                  href={`mailto:${site.email}`}
++                  className="break-all text-lg font-semibold text-brand hover:text-brand-dark"
++                >
++                  {site.email}
++                </a>
++              </dd>
+             </div>
+-
+-            <div className="surface-card p-8">
+-              <h2 className="font-display text-xl font-bold">
+-                Connect With Me
+-              </h2>
+-
+-              <div className="mt-4 grid grid-cols-2 gap-2">
+-                {[
+-        
+-                  {
+-                    icon: FaLinkedin,
+-                    label: "LinkedIn",
+-                    href: "https://www.linkedin.com/in/aduragbemialeem",
+-                    target: "_blank",
+-                    rel:"noopener noreferrer"
+-                  },
+- {
+-                    icon: FaInstagram,
+-                    label: "Instagram",
+-                    href: "https://www.instagram.com/a_aduragbemi/",
+-                    target: "_blank",
+-                    rel: "noopener noreferrer"
+-                  },
+-
+-                  { icon: FaTiktok, label: "TikTok", 
+-                    href:"https://www.tiktok.com/@the_beanie_guy",
+-                    target: "_blank",
+-                    rel: "noopener noreferrer"
+-                   },
+-
+-                 
+-
+-                   { icon: FaTwitter, label: "Twitter / X" , 
+-                    href: "https://x.com/Aduragbemi_AE",
+-                    target: "_blank",
+-                    rel: "noopener noreferrer"
+-                   }
+-                ].map((social) => (
+-                  <a
+-                    key={social.label}
+-                    href={social.href}
+-                    className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground hover:bg-surface-elevated"
+-                  >
+-                    <social.icon className="h-4 w-4 text-accent2" />
+-                    {social.label}
+-                  </a>
+-                ))}
+-              </div>
++            <div>
++              <dt className={label}>Location</dt>
++              <dd className="text-lg font-semibold">{site.location} · open to remote</dd>
+             </div>
++          </dl>
++
++          <div className="flex flex-wrap gap-3">
++            <a
++              href={links.whatsappCall}
++              target="_blank"
++              rel="noopener noreferrer"
++              className={button({ variant: "outline", size: "md" })}
++            >
++              <Calendar className="h-4 w-4" aria-hidden="true" />
++              Book a discovery call
++            </a>
++            {site.cvPath && (
++              <a href={site.cvPath} download className={button({ variant: "dark", size: "md" })}>
++                Download CV
++              </a>
++            )}
+           </div>
++
++          <h2 className="mb-3 mt-10 font-display text-lg font-bold">Connect with me</h2>
++          <ul className="grid grid-cols-2 gap-2">
++            {socials.map((social) => (
++              <li key={social.label}>
++                {/* target/rel were defined but never applied before; now they are. */}
++                <a
++                  href={social.href}
++                  target="_blank"
++                  rel="noopener noreferrer"
++                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:border-brand"
++                >
++                  <social.icon className="h-4 w-4 text-brand" aria-hidden="true" />
++                  {social.label}
++                </a>
++              </li>
++            ))}
++          </ul>
+         </div>
+-      </Section>
+ 
+-      <Section eyebrow="FAQ" title="Frequently Asked Questions">
+-        <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface/40">
++        <form
++          ref={formRef}
++          onSubmit={handleSubmit}
++          className="flex min-w-0 flex-col gap-4 self-start rounded-2xl border border-border bg-surface p-6 md:p-9"
++        >
++          <h2 className="font-display text-2xl font-bold">Send a message</h2>
++
++          <Field label="Name">
++            <input required type="text" name="name" autoComplete="name" className="input" placeholder="Your name" />
++          </Field>
++
++          <Field label="Email">
++            <input
++              required
++              type="email"
++              name="email"
++              autoComplete="email"
++              className="input"
++              placeholder="your@email.com"
++            />
++          </Field>
++
++          {/* Field name stays "service" so Formspree submissions keep the same shape. */}
++          <Field label="Topic">
++            <select className="input" name="service" required defaultValue="">
++              <option value="" disabled>
++                Select a topic
++              </option>
++              <option>Job opportunity</option>
++              <option>General Inquiry</option>
++              <option>AI Human Integration</option>
++              <option>SEO / GEO / AEO</option>
++              <option>Content Marketing</option>
++              <option>Career Coaching</option>
++              <option>Collaboration</option>
++            </select>
++          </Field>
++
++          <Field label="Message">
++            <textarea
++              required
++              rows={5}
++              name="message"
++              className="input resize-y"
++              placeholder="Tell me about the role, project or goal..."
++            />
++          </Field>
++
++          {state.succeeded ? (
++            <div
++              role="status"
++              className="flex items-center gap-2 rounded-xl border border-border bg-brand-soft px-4 py-3 text-sm text-accent-foreground"
++            >
++              <Check className="h-5 w-5" aria-hidden="true" />
++              Thanks! Your message has been received.
++            </div>
++          ) : (
++            <button
++              type="submit"
++              disabled={state.submitting}
++              className={`${button({ variant: "primary" })} self-start`}
++            >
++              {state.submitting ? "Sending..." : "Send message"}
++              <Send className="h-4 w-4" aria-hidden="true" />
++            </button>
++          )}
++        </form>
++      </section>
++
++      <Section eyebrow="FAQ" title="Frequently asked questions" align="center">
++        <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface">
+           {faqs.map((faq) => (
+             <div key={faq.q} className="px-6 py-5">
+-              <p className="font-display text-base font-semibold">
+-                {faq.q}
+-              </p>
+-
+-              <p className="mt-2 text-sm text-muted-foreground">
+-                {faq.a}
+-              </p>
++              <p className="font-display text-base font-semibold">{faq.q}</p>
++              <p className="mt-2 text-sm text-muted-foreground">{faq.a}</p>
+             </div>
+           ))}
+         </div>
+       </Section>
+-
+-      <style jsx>{`
+-        .input {
+-          height: 44px;
+-          width: 100%;
+-          border-radius: 12px;
+-          border: 1px solid var(--color-border);
+-          background: var(--surface);
+-          padding: 0 14px;
+-          color: var(--color-foreground);
+-          font-size: 14px;
+-        }
+-
+-        textarea.input {
+-          height: auto;
+-        }
+-
+-        .input::placeholder {
+-          color: var(--color-muted-foreground);
+-        }
+-
+-        .input:focus {
+-          outline: none;
+-          border-color: var(--brand);
+-          box-shadow: 0 0 0 3px oklch(0.78 0.12 75 / 0.35);
+-        }
+-      `}</style>
+     </>
+   );
+ }
+@@ -277,13 +200,11 @@ type FieldProps = {
+   children: React.ReactNode;
+ };
+ 
+-function Field({ label, children }: FieldProps) {
++function Field({ label: text, children }: FieldProps) {
+   return (
+     <label className="flex flex-col gap-1.5">
+-      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+-        {label}
+-      </span>
++      <span className="text-sm font-semibold">{text}</span>
+       {children}
+     </label>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/components/Faq.tsx b/components/Faq.tsx
+new file mode 100644
+index 0000000..45d4506
+--- /dev/null
++++ b/components/Faq.tsx
+@@ -0,0 +1,58 @@
++"use client";
++
++import { useState } from "react";
++import { ChevronDown } from "lucide-react";
++import Section from "@/components/Section";
++
++export type FaqItem = { q: string; a: string };
++
++/**
++ * Accordion FAQ. Moved unchanged in behaviour from the old Home page:
++ * one item open at a time, first item open by default.
++ */
++export default function Faq({
++  items,
++  eyebrow = "FAQ",
++  title = "Questions, answered.",
++}: {
++  items: FaqItem[];
++  eyebrow?: string;
++  title?: string;
++}) {
++  const [open, setOpen] = useState<number | null>(0);
++
++  return (
++    <Section eyebrow={eyebrow} title={title} align="center">
++      <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface">
++        {items.map((faq, index) => {
++          const isOpen = open === index;
++          const panelId = `faq-panel-${index}`;
++          return (
++            <div key={faq.q}>
++              <button
++                type="button"
++                onClick={() => setOpen(isOpen ? null : index)}
++                aria-expanded={isOpen}
++                aria-controls={panelId}
++                className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
++              >
++                <span className="font-display text-base font-semibold">{faq.q}</span>
++                <ChevronDown
++                  aria-hidden="true"
++                  className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
++                    isOpen ? "rotate-180" : ""
++                  }`}
++                />
++              </button>
++              {isOpen && (
++                <p id={panelId} className="px-6 pb-5 text-sm text-muted-foreground">
++                  {faq.a}
++                </p>
++              )}
++            </div>
++          );
++        })}
++      </div>
++    </Section>
++  );
++}
+diff --git a/components/Fill.tsx b/components/Fill.tsx
+new file mode 100644
+index 0000000..29afefb
+--- /dev/null
++++ b/components/Fill.tsx
+@@ -0,0 +1,16 @@
++import { isTodo, type Fill as FillValue } from "@/content/portfolio";
++
++/**
++ * Renders a content value. Unfinished values (todo("…")) render as a
++ * highlighted "[…]" marker so they are obvious on preview deployments.
++ */
++export default function Fill({ value }: { value: FillValue }) {
++  if (isTodo(value)) {
++    return (
++      <span className="rounded bg-placeholder px-1.5 py-px font-medium text-placeholder-foreground">
++        [{value.todo}]
++      </span>
++    );
++  }
++  return <>{value}</>;
++}
+diff --git a/components/Footer.tsx b/components/Footer.tsx
+index eb4e8a3..67c71e3 100644
+--- a/components/Footer.tsx
++++ b/components/Footer.tsx
+@@ -1,53 +1,46 @@
+ import Link from "next/link";
++import { links, site } from "@/content/portfolio";
+ 
+ const Footer = () => {
+   return (
+-    <footer className="border-t border-border/60 bg-surface/40">
+-      <div className="mx-auto grid max-w-5xl gap-12 px-6 py-16 text-center md:grid-cols-3">
+-        <FooterCol title="Learn">
+-          <FooterLink href="/services">Services</FooterLink>
+-          <FooterLink href="/community">Community</FooterLink>
+-        </FooterCol>
+-
+-        <FooterCol title="Aduragbemi Aleem">
+-          <FooterLink href="/about">About Me</FooterLink>
+-          <FooterLink href="/contact">Contact Me</FooterLink>
+-        </FooterCol>
+-
+-        <FooterCol title="Social">
++    <footer className="border-t border-border bg-surface">
++      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-4">
++        <div>
++          <p className="font-display text-lg font-bold">{site.name}</p>
++          <p className="mt-2 text-sm text-muted-foreground">{site.role}</p>
+           <a
+-            href="https://www.linkedin.com/in/aduragbemialeem" target="_blank" rel="noopener noreferrer"
+-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
++            href={`mailto:${site.email}`}
++            className="mt-4 inline-block text-sm font-medium text-brand hover:text-brand-dark"
+           >
+-            LinkedIn
++            {site.email}
+           </a>
++        </div>
+ 
+-          <a
+-            href="https://www.tiktok.com/@the_beanie_guy" target="_blank" rel="noopener noreferrer"
+-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+-          >
+-            TikTok
+-          </a>
++        <FooterCol title="Portfolio">
++          <FooterLink href="/work">Work</FooterLink>
++          <FooterLink href="/about">About</FooterLink>
++          <FooterLink href="/contact">Contact</FooterLink>
++        </FooterCol>
+ 
+-          <a
+-            href="https://www.instagram.com/a_aduragbemi/" target="_blank" rel="noopener noreferrer"
+-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+-          >
+-            Instagram
+-          </a>
++        {/* Kept live at the owner's request; linked from the footer only. */}
++        <FooterCol title="More">
++          <FooterLink href="/services">Services</FooterLink>
++          <FooterLink href="/community">Community</FooterLink>
++          <ExternalLink href={links.medium}>Medium</ExternalLink>
++        </FooterCol>
+ 
+-          <a
+-            href="https://x.com/Aduragbemi_AE" target="_blank" rel="noopener noreferrer"
+-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+-          >
+-            Twitter/X
+-          </a>
++        <FooterCol title="Social">
++          <ExternalLink href={links.linkedin}>LinkedIn</ExternalLink>
++          <ExternalLink href={links.tiktok}>TikTok</ExternalLink>
++          <ExternalLink href={links.instagram}>Instagram</ExternalLink>
++          <ExternalLink href={links.x}>Twitter/X</ExternalLink>
+         </FooterCol>
+       </div>
+ 
+-      <div className="border-t border-border/60">
+-        <div className="mx-auto flex max-w-5xl justify-center px-6 py-6 text-center text-xs text-muted-foreground">
+-          <p>© {new Date().getFullYear()} Aduragbemi Aleem. All rights reserved.</p>
++      <div className="border-t border-border">
++        <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-6 py-6 text-sm text-muted-foreground">
++          <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
++          <p>{site.location}</p>
+         </div>
+       </div>
+     </footer>
+@@ -61,14 +54,11 @@ type FooterColProps = {
+ 
+ const FooterCol = ({ title, children }: FooterColProps) => {
+   return (
+-    <div className="flex flex-col items-center">
+-      <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-foreground">
++    <div>
++      <h2 className="mb-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+         {title}
+-      </h4>
+-
+-      <div className="flex flex-col items-center gap-2">
+-        {children}
+-      </div>
++      </h2>
++      <div className="flex flex-col items-start gap-2">{children}</div>
+     </div>
+   );
+ };
+@@ -78,15 +68,22 @@ type FooterLinkProps = {
+   children: React.ReactNode;
+ };
+ 
++const linkClass = "text-sm text-foreground transition-colors hover:text-brand";
++
+ const FooterLink = ({ href, children }: FooterLinkProps) => {
+   return (
+-    <Link
+-      href={href}
+-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+-    >
++    <Link href={href} className={linkClass}>
+       {children}
+     </Link>
+   );
+ };
+ 
+-export default Footer;
+\ No newline at end of file
++const ExternalLink = ({ href, children }: FooterLinkProps) => {
++  return (
++    <a href={href} target="_blank" rel="noopener noreferrer" className={linkClass}>
++      {children}
++    </a>
++  );
++};
++
++export default Footer;
+diff --git a/components/Header.tsx b/components/Header.tsx
+index 20ce455..921e8d4 100644
+--- a/components/Header.tsx
++++ b/components/Header.tsx
+@@ -4,93 +4,105 @@ import { useState } from "react";
+ import Link from "next/link";
+ import { usePathname } from "next/navigation";
+ 
+-import { Menu, X, HouseIcon } from "lucide-react";
++import { Menu, X } from "lucide-react";
++import { site } from "@/content/portfolio";
+ 
++// Services and Community stay live but are linked from the footer only.
+ const navItems = [
+- 
++  { href: "/work", label: "Work" },
+   { href: "/about", label: "About" },
+-   { href: "/services", label: "Services" },
+-  { href: "/community", label: "Community" },
++  { href: "/contact", label: "Contact" },
+ ] as const;
+ 
+ const Header = () => {
+   const [open, setOpen] = useState(false);
+-    const pathname = usePathname();
++  const pathname = usePathname();
++
++  const isActive = (href: string) =>
++    pathname === href || pathname.startsWith(`${href}/`);
+ 
+   return (
+-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+-        <Link href="/" className="flex items-center gap-2" aria-label="ADR Hub home">
+-          <HouseIcon className="h-6 w-6" />
+-          
++    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
++      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
++        <Link
++          href="/"
++          className="font-display text-xl font-bold text-foreground"
++          aria-label={`${site.name}, home`}
++        >
++          {site.name}
+         </Link>
+ 
+-        <nav className="hidden items-center gap-8 md:flex">
++        <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
+           {navItems.map((item) => (
+             <Link
+               key={item.href}
+               href={item.href}
+-              className={`text-sm transition-colors ${
+-  pathname === item.href
+-    ? "text-foreground underline underline-offset-8 decoration-2 decoration-accent2"
+-    : "text-muted-foreground hover:text-foreground"
+-}`}
++              aria-current={isActive(item.href) ? "page" : undefined}
++              className={`text-[15px] font-medium transition-colors ${
++                isActive(item.href)
++                  ? "text-brand underline decoration-2 underline-offset-8"
++                  : "text-foreground hover:text-brand"
++              }`}
+             >
+               {item.label}
+             </Link>
+           ))}
+-        </nav>
+-
+-        <div className="hidden items-center gap-3 md:flex">
+-         
+ 
+-          <Link
+-            href="/contact"
+-            className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-brand px-5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5"
+-          >
+-            Contact Me
+-          </Link>
+-        </div>
++          {site.cvPath && (
++            <a
++              href={site.cvPath}
++              download
++              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-brand-dark"
++            >
++              Download CV
++            </a>
++          )}
++        </nav>
+ 
+         <button
+           type="button"
+           onClick={() => setOpen((prev) => !prev)}
+-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface md:hidden"
+-          aria-label="Toggle menu"
++          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface md:hidden"
++          aria-label={open ? "Close menu" : "Open menu"}
++          aria-expanded={open}
++          aria-controls="mobile-nav"
+         >
+-          {open ? (
+-            <X className="h-5 w-5" />
+-          ) : (
+-            <Menu className="h-5 w-5" />
+-          )}
++          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+         </button>
+       </div>
+ 
+       {open && (
+-        <div className="md:hidden">
+-          <nav className="flex flex-col gap-1 border-t border-border/60 px-6 py-4">
++        <div className="md:hidden" id="mobile-nav">
++          <nav
++            className="flex flex-col gap-1 border-t border-border px-6 py-4"
++            aria-label="Main"
++          >
+             {navItems.map((item) => (
+               <Link
+                 key={item.href}
+                 href={item.href}
+                 onClick={() => setOpen(false)}
+-              className={`rounded-lg px-3 py-3 text-base transition-colors ${
+-  pathname === item.href
+-    ? "bg-surface text-foreground"
+-    : "text-muted-foreground hover:bg-surface hover:text-foreground"
+-}`}
++                aria-current={isActive(item.href) ? "page" : undefined}
++                className={`rounded-lg px-3 py-3 text-base font-medium transition-colors ${
++                  isActive(item.href)
++                    ? "bg-brand-soft text-brand-dark"
++                    : "text-foreground hover:bg-surface-elevated"
++                }`}
+               >
+                 {item.label}
+               </Link>
+             ))}
+ 
+-            <Link
+-              href="/contact"
+-              onClick={() => setOpen(false)}
+-              className="mt-2 inline-flex h-12 items-center justify-center rounded-xl bg-gradient-brand px-5 text-base font-semibold text-brand-foreground shadow-glow"
+-            >
+-              Contact Me
+-            </Link>
++            {site.cvPath && (
++              <a
++                href={site.cvPath}
++                download
++                onClick={() => setOpen(false)}
++                className="mt-2 inline-flex h-12 items-center justify-center rounded-lg bg-primary px-5 text-base font-semibold text-primary-foreground"
++              >
++                Download CV
++              </a>
++            )}
+           </nav>
+         </div>
+       )}
+@@ -98,4 +110,4 @@ const Header = () => {
+   );
+ };
+ 
+-export default Header;
+\ No newline at end of file
++export default Header;
+diff --git a/components/Home.tsx b/components/Home.tsx
+index 44f11d8..39f6ca2 100644
+--- a/components/Home.tsx
++++ b/components/Home.tsx
+@@ -1,325 +1,202 @@
+-"use client";
+-
+ import Link from "next/link";
+ import Image from "next/image";
+-import { useState } from "react";
+-import MediumBlog from "@/components/MediumBlog"
+-import {
+-  ArrowRight,
+-  Sparkles,
+-  Code2,
+-  // Palette,
+-  Megaphone,
+-  Briefcase,
+-  Users,
+-  Zap,
+-  Globe2,
+-  Bot,
+-  ChevronDown,
+-} from "lucide-react";
++import { ArrowRight, ArrowUpRight } from "lucide-react";
+ 
+-import Section from "@/components/Section";
+ import Reveal from "@/components/Reveal";
+-
++import Fill from "@/components/Fill";
++import { button, container, displayHeading, eyebrow, label, sectionHeading } from "@/components/ui";
++import {
++  caseStudies,
++  featuredCaseIds,
++  homeCardEyebrows,
++  homeCardTitles,
++  links,
++  pillars,
++  proofPoints,
++  sampleSources,
++  site,
++} from "@/content/portfolio";
+ 
+ const Home = () => {
+   return (
+     <>
+-    <Hero />      
+-
+-<Reveal>
+-  <Programs />
+-</Reveal>
+-
+-<Reveal>
+-  <WhyADR />
+-</Reveal>
+-
+-<Reveal>
+-  <Community />
+-</Reveal>
+-
+-<Reveal>
+-  <MediumBlog />
+-</Reveal>
+-
+-<Reveal>
+-  <FAQ />
+-</Reveal>
+-
+-<Reveal>
+-  <FinalCTA />
+-</Reveal>
++      <Hero />
++      <ProofStrip />
++      <Reveal>
++        <SelectedWork />
++      </Reveal>
++      <Reveal>
++        <WhatIDo />
++      </Reveal>
++      <Reveal>
++        <WritingSamples />
++      </Reveal>
++      <FinalCTA />
+     </>
+   );
+ };
+ 
+-const programs = [
+-  {
+-    slug: "ai-human-integrator",
+-    icon: <Sparkles className="h-6 w-6" />,
+-    title: "AI Human Integrator",
+-    tagline: "Learn to integrate AI into your workflows, projects, and career for maximum impact.",
+-  },
+-  {
+-    slug: "SEO-GEO-AEO-manager",
+-    icon: <Code2 className="h-6 w-6" />,
+-    title: "SEO/GEO/AEO Manager",
+-    tagline: "Master search engine optimization, growth, and analytics for global reach. ",
+-  },
+-  {
+-    slug: "content-marketer",
+-    icon: <Megaphone className="h-6 w-6" />,
+-    title: "Content Marketer",
+-    tagline: "Create compelling content that drives engagement and conversions.",
+-  },
+-  {
+-    slug: "career-coach",
+-    icon: <Briefcase className="h-6 w-6" />,
+-    title: "Career Coach",
+-    tagline: "Navigate your career path with confidence and clarity.",
+-  },
+- 
+-];
+-
+ function Hero() {
+   return (
+-    <section className="relative overflow-hidden">
+-      <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
+-
+-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 md:grid-cols-2 md:py-32">
+-        <div>
+-
+-          <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl">
+-           Meet Aduragbemi{" "}
+-            <span className="text-gradient">Aleem.</span>
+-          </h1>
+-
+-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+-            Aduragbemi Aleem is a digital professional with a passion for creating innovative solutions that leverage technology to solve real-world problems. With expertise in content management, digital marketing, and AI integration, Aduragbemi is dedicated to helping businesses and individuals thrive in the digital age.
+-          </p>
++    <section className={`${container} flex flex-col gap-10 py-12 md:flex-row md:items-center md:gap-14 md:py-24`}>
++      <div className="min-w-0 md:flex-[3]">
++        <p className={`${eyebrow} mb-5`}>SEO · AEO · GEO Strategist</p>
++        <h1 className={`${displayHeading} mb-6`}>
++          I help tech and AI brands get found on Google and cited by AI.
++        </h1>
++        <p className="mb-8 max-w-xl text-lg text-muted-foreground md:text-xl">
++          <Fill value={site.yearsOfExperience} /> years writing and managing content for fintech,
++          Web3 and AI companies. Co-author of an NLP dataset recognised at Deep Learning Indaba 2026.
++        </p>
++        <div className="flex flex-wrap gap-3">
++          <Link href="/work" className={button()}>
++            View my work
++          </Link>
++          {site.cvPath ? (
++            <a href={site.cvPath} download className={button({ variant: "outline" })}>
++              Download CV
++            </a>
++          ) : (
++            <Link href="/contact" className={button({ variant: "outline" })}>
++              Get in touch
++            </Link>
++          )}
+         </div>
++      </div>
+ 
+-        <div className="relative">
+-          <div className="absolute -inset-4 rounded-3xl bg-gradient-brand opacity-20 blur-3xl" />
+-
+-          <Image
+-            src="/images/ADR.jpeg"
+-            alt="AI-powered learning visualization"
+-            width={1024}
+-            height={1024}
+-            className="relative aspect-square w-full rounded-3xl border border-border object-cover"
+-            priority
+-          />
+-        </div>
++      <div className="min-w-0 md:flex-[2]">
++        <Image
++          src="/images/ADR.jpeg"
++          alt={`Portrait of ${site.name}`}
++          width={720}
++          height={1080}
++          priority
++          sizes="(min-width: 768px) 40vw, 100vw"
++          className="aspect-[4/5] max-h-[440px] w-full rounded-2xl border border-border object-cover object-top"
++        />
+       </div>
+     </section>
+   );
+ }
+ 
+-function Programs() {
++function ProofStrip() {
+   return (
+-    <Section
+-  eyebrow="Services"
+-  title="What Aduragbemi Does"
+-  subtitle="Each service focuses on helping your business gain visibility, drive growth, and thrive in the digital age."
+->
+-  <div className="grid gap-6 md:grid-cols-2">
+-    {programs.map((program) => (
+-      <div
+-        key={program.slug}
+-        className="surface-card flex flex-col p-8 transition-all hover:-translate-y-1 hover:border-brand/50"
+-      >
+-        <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand text-xl text-brand-foreground shadow-glow">
+-          {program.icon}
+-        </div>
+-
+-        <h3 className="font-display text-xl font-semibold">
+-          {program.title}
+-        </h3>
+-
+-        <p className="mt-2 text-sm text-muted-foreground">
+-          {program.tagline}
+-        </p>
++    <section aria-label="Current roles and recognition" className="border-y border-border bg-surface">
++      <div className={`${container} grid gap-5 py-7 sm:grid-cols-3 sm:gap-10`}>
++        {proofPoints.map((p) => (
++          <div key={p.value}>
++            <p className={label}>{p.label}</p>
++            <p className="mt-1 font-semibold">{p.value}</p>
++          </div>
++        ))}
+       </div>
+-    ))}
+-  </div>
+-</Section>
++    </section>
+   );
+ }
+ 
+-const reasons = [
+-  {
+-    icon: Bot,
+-    title: "AI-Driven Solutions",
+-    desc: "I help businesses integrate AI into their workflows to improve productivity, automate repetitive tasks, and create better digital experiences.",
+-  },
+-  {
+-    icon: Zap,
+-    title: "Visibility That Converts",
+-    desc: "From SEO to GEO and AEO, I build strategies that help brands get discovered by both search engines and AI-powered platforms.",
+-  },
+-  {
+-    icon: Users,
+-    title: "Strategy Meets Execution",
+-    desc: "I don't just create plans. I execute them, delivering content, systems, and digital solutions that produce measurable results.",
+-  },
+-  {
+-    icon: Globe2,
+-    title: "Career Growth Guidance",
+-    desc: "Whether you're breaking into tech, switching careers, or positioning yourself for new opportunities, I provide practical guidance to help you build a clear path forward.",
+-  },
+-];
++function SelectedWork() {
++  const featured = featuredCaseIds
++    .map((id) => caseStudies.find((c) => c.id === id))
++    .filter((c) => c !== undefined);
+ 
+-function WhyADR() {
+   return (
+-    <Section
+-      title="Why Aduragbemi Aleem?"
+-      subtitle="I combine technical expertise, strategic thinking, and practical execution to deliver solutions that create real business impact."
+-     
+->
+-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+-        {reasons.map((reason) => (
+-          <div key={reason.title} className="surface-card p-6">
+-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-accent2">
+-              <reason.icon className="h-5 w-5" />
+-            </div>
+-
+-            <h3 className="mt-4 font-display text-lg font-semibold">
+-              {reason.title}
+-            </h3>
+-
+-            <p className="mt-2 text-sm text-muted-foreground">
+-              {reason.desc}
++    <section className={`${container} py-16 md:py-24`}>
++      <div className="mb-9 flex flex-wrap items-baseline justify-between gap-4">
++        <h2 className={sectionHeading}>Selected work</h2>
++        <Link href="/work" className="font-semibold text-brand hover:text-brand-dark">
++          All case studies →
++        </Link>
++      </div>
++      <div className="grid gap-6 md:grid-cols-3">
++        {featured.map((c) => (
++          <article
++            key={c.id}
++            className="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-6 md:p-7"
++          >
++            <p className={eyebrow}>{homeCardEyebrows[c.id]}</p>
++            <h3 className="font-display text-2xl font-bold leading-tight">{homeCardTitles[c.id]}</h3>
++            <p className="text-muted-foreground">
++              {c.summary.map((s, i) => (
++                <span key={i}>
++                  {i > 0 && " "}
++                  <Fill value={s} />
++                </span>
++              ))}
+             </p>
+-          </div>
++            <Link
++              href={`/work#${c.id}`}
++              className="mt-auto inline-flex items-center gap-1 font-semibold text-brand hover:text-brand-dark"
++            >
++              Read case study <ArrowRight className="h-4 w-4" aria-hidden="true" />
++            </Link>
++          </article>
+         ))}
+       </div>
+-    </Section>
++    </section>
+   );
+ }
+ 
+-
+-function Community() {
++function WhatIDo() {
+   return (
+-    <Section>
+-      <div className="surface-card relative overflow-hidden p-10 md:p-16">
+-        <div className="absolute inset-0 bg-hero-glow opacity-60" />
+-
+-        <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto]">
+-          <div>
+-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-accent2">
+-              Newsletter
+-            </p>
+-
+-            <h2 className="font-display text-3xl font-bold tracking-tight md:text-5xl">
+-              Subscribe to my Newsletter
+-            </h2>
+-
+-            <p className="mt-4 max-w-xl text-lg text-muted-foreground">
+-              Be the first to know about the latest insights, tips, and updates on digital marketing, AI integration, and content management.
+-            </p>
++    <section className={`${container} pb-16 md:pb-24`}>
++      <h2 className={`${sectionHeading} mb-9`}>What I do</h2>
++      <div className="grid gap-8 md:grid-cols-3 md:gap-10">
++        {pillars.map((p) => (
++          <div key={p.title} className="border-t-2 border-foreground pt-5">
++            <h3 className="mb-2.5 text-xl font-semibold">{p.title}</h3>
++            <p className="text-muted-foreground">{p.text}</p>
+           </div>
+-
+-          <Link
+-            href="/community"
+-            className="inline-flex h-12 items-center justify-center gap-2 self-start rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
+-          >
+-            Subscribe
+-
+-            <ArrowRight className="h-4 w-4" />
+-          </Link>
+-        </div>
++        ))}
+       </div>
+-    </Section>
++    </section>
+   );
+ }
+ 
+-
+-const faqs = [
+-  {
+-    q: "Who is Aduragbemi Aleem?",
+-    a: "I am a digital professional with expertise in content management, digital marketing, and AI integration. I am passionate about helping businesses and individuals thrive in the digital age.",
+-  },
+-  {
+-    q: "What services do I offer?",
+-    a: "I offer a range of services including AI integration, SEO/GEO/AEO management, and content marketing. Each service is designed to help your business gain visibility, drive growth, and thrive in the digital age. Based on your business needs, I can provide tailored solutions to help you achieve your goals.",
+-  },
+-  {
+-    q: "How much do my services cost",
+-    a: "My pricing varies depending on the scope and complexity of the project. I offer competitive rates and can provide a detailed quote after discussing your specific needs and requirements.",
+-  },
+-  {
+-    q: "Why should your trust me?",
+-    a: "I come with a proven track record of delivering results for clients across various industries. My expertise, dedication, and commitment to your success make me a reliable partner for your digital needs.",
+-  },
+-  {
+-    q: "Can you provide proof of your work and results?",
+-    a: "Yes, I can provide case studies, testimonials, and examples of my previous work to demonstrate the results I have achieved for clients. I am happy to share this information upon request.",
+-  },
+-];
+-
+-const FAQ = () => {
+-  const [open, setOpen] = useState<number | null>(0);
+-
++function WritingSamples() {
+   return (
+-    <Section eyebrow="FAQ" title="Questions, answered." align="center">
+-      <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface/40">
+-        {faqs.map((faq, index) => (
+-          <button
+-            key={faq.q}
+-            onClick={() => setOpen(open === index ? null : index)}
+-            className="flex w-full flex-col px-6 py-5 text-left"
++    <section className={`${container} pb-16 md:pb-24`}>
++      <h2 className="mb-6 font-display text-2xl font-bold md:text-3xl">Writing samples</h2>
++      <div className="flex flex-wrap gap-3">
++        {sampleSources.map((s) => (
++          <a
++            key={s.href}
++            href={s.href}
++            target="_blank"
++            rel="noopener noreferrer"
++            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-5 py-3 font-medium text-brand hover:border-brand"
+           >
+-            <div className="flex items-center justify-between gap-4">
+-              <span className="font-display text-base font-semibold">
+-                {faq.q}
+-              </span>
+-
+-              <ChevronDown
+-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+-                  open === index ? "rotate-180" : ""
+-                }`}
+-              />
+-            </div>
+-
+-            {open === index && (
+-              <p className="mt-3 text-sm text-muted-foreground">
+-                {faq.a}
+-              </p>
+-            )}
+-          </button>
++            {s.label} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
++          </a>
+         ))}
+       </div>
+-    </Section>
++    </section>
+   );
+-};
++}
+ 
+-const FinalCTA = () => {
++function FinalCTA() {
+   return (
+-    <Section>
+-      <div className="surface-card relative overflow-hidden p-12 text-center md:p-20">
+-        <div className="absolute inset-0 bg-hero-glow" />
+-
+-        <div className="relative">
+-          <h2 className="mx-auto max-w-3xl font-display text-4xl font-bold tracking-tight md:text-6xl">
+-            Your digital future{" "}
+-            <span className="text-gradient">starts here.</span>
+-          </h2>
+-
+-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+-
+-            <Link
+-              href="/contact"
+-              className="inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-6 text-sm font-semibold text-foreground hover:bg-surface-elevated"
+-            >
+-              Talk to me at no cost  <ArrowRight className="h-4 w-4" />
+-            </Link>
+-          </div>
++    <section className="bg-primary text-primary-foreground">
++      <div className={`${container} flex flex-col gap-8 py-14 md:flex-row md:items-center md:justify-between md:py-20`}>
++        <div>
++          <h2 className={`${sectionHeading} mb-3`}>Hiring for SEO, content or AI-search roles?</h2>
++          <p className="text-lg text-primary-foreground/80">I&apos;d like to hear about it.</p>
++        </div>
++        <div className="flex flex-wrap gap-3">
++          <a href={`mailto:${site.email}`} className={button({ variant: "light" })}>
++            Email me
++          </a>
++          <a
++            href={links.linkedin}
++            target="_blank"
++            rel="noopener noreferrer"
++            className={button({ variant: "outlineLight" })}
++          >
++            LinkedIn
++          </a>
+         </div>
+       </div>
+-    </Section>
++    </section>
+   );
+-};
++}
+ 
+-export default Home;
+\ No newline at end of file
++export default Home;
+diff --git a/components/Section.tsx b/components/Section.tsx
+index 27d26a4..7ac87d8 100644
+--- a/components/Section.tsx
++++ b/components/Section.tsx
+@@ -21,7 +21,7 @@ const Section = ({
+ }: SectionProps) => {
+   return (
+     <section id={id} className={`py-20 md:py-28 ${className}`}>
+-      <div className="mx-auto max-w-7xl px-6">
++      <div className="mx-auto max-w-6xl px-6">
+         {(eyebrow || title || subtitle) && (
+           <div
+             className={`mb-12 max-w-2xl ${
+diff --git a/components/Services.tsx b/components/Services.tsx
+index 873b8ff..9f9c6a0 100644
+--- a/components/Services.tsx
++++ b/components/Services.tsx
+@@ -1,20 +1,36 @@
+-import type { Metadata } from "next";
++import Link from "next/link";
+ import { ArrowRight } from "lucide-react";
+ import Section from "@/components/Section";
+ import WaitlistForm from "@/components/WaitlistForm";
+ import MediumBlog from "@/components/MediumBlog";
+ import Reveal from "@/components/Reveal";
++import Faq, { type FaqItem } from "@/components/Faq";
+ 
+-export const metadata: Metadata = {
+-  title: "Services | ADR Hub",
+-  description:
+-    "Helping businesses and professionals grow through AI integration, SEO, content marketing, and career coaching.",
+-  openGraph: {
+-    title: "Services | ADR Hub",
+-    description:
+-      "Explore the digital services I offer to help you grow your business and career.",
++// Page metadata now lives in app/services/page.tsx (Next.js ignored it here).
++
++// Moved from the old Home page. These questions are about services, so they live here now.
++const faqs: FaqItem[] = [
++  {
++    q: "Who is Aduragbemi Aleem?",
++    a: "I am a digital professional with expertise in content management, digital marketing, and AI integration. I am passionate about helping businesses and individuals thrive in the digital age.",
++  },
++  {
++    q: "What services do I offer?",
++    a: "I offer a range of services including AI integration, SEO/GEO/AEO management, and content marketing. Each service is designed to help your business gain visibility, drive growth, and thrive in the digital age. Based on your business needs, I can provide tailored solutions to help you achieve your goals.",
++  },
++  {
++    q: "How much do my services cost?",
++    a: "My pricing varies depending on the scope and complexity of the project. I offer competitive rates and can provide a detailed quote after discussing your specific needs and requirements.",
+   },
+-};
++  {
++    q: "Why should you trust me?",
++    a: "I come with a proven track record of delivering results for clients across various industries. My expertise, dedication, and commitment to your success make me a reliable partner for your digital needs.",
++  },
++  {
++    q: "Can you provide proof of your work and results?",
++    a: "Yes, I can provide case studies, testimonials, and examples of my previous work to demonstrate the results I have achieved for clients. I am happy to share this information upon request.",
++  },
++];
+ 
+ const services = [
+   {
+@@ -80,10 +96,15 @@ export default function Services() {
+                   {service.description}
+                 </p>
+ 
+-                <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5">
++                {/* Previously a <button> with no handler; now goes to the contact page. */}
++                <Link
++                  href="/contact"
++                  className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5"
++                >
+                   Learn More
+-                  <ArrowRight className="h-4 w-4" />
+-                </button>
++                  <span className="sr-only"> about {service.title}</span>
++                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
++                </Link>
+               </div>
+             </Reveal>
+           ))}
+@@ -117,6 +138,10 @@ export default function Services() {
+       </Section>
+ 
+       <MediumBlog />
++
++      <Reveal>
++        <Faq items={faqs} />
++      </Reveal>
+     </>
+   );
+ }
+\ No newline at end of file
+diff --git a/components/WaitlistForm.tsx b/components/WaitlistForm.tsx
+index f93943c..fe9fc0a 100644
+--- a/components/WaitlistForm.tsx
++++ b/components/WaitlistForm.tsx
+@@ -82,7 +82,8 @@ const WaitlistForm = ({
+   value={email}
+   onChange={(e) => setEmail(e.target.value)}
+   placeholder="your@email.com"
+-  className="h-12 w-full min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 sm:text-sm"
++  aria-label="Email address"
++  className="h-12 w-full min-w-0 flex-1 rounded-xl border border-input bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 sm:text-sm"
+ />
+ 
+   <button
+diff --git a/components/Work.tsx b/components/Work.tsx
+new file mode 100644
+index 0000000..f09dd6d
+--- /dev/null
++++ b/components/Work.tsx
+@@ -0,0 +1,150 @@
++import Reveal from "@/components/Reveal";
++import Fill from "@/components/Fill";
++import { button, container, displayHeading, eyebrow, sectionHeading } from "@/components/ui";
++import { caseStudies, isTodo, writingSamples, type CaseStudy } from "@/content/portfolio";
++
++export default function Work() {
++  return (
++    <>
++      <section className={`${container} pb-8 pt-12 md:pb-12 md:pt-20`}>
++        <h1 className={`${displayHeading} mb-4`}>Selected work</h1>
++        <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
++          Each case study covers the problem, what I did, and what came of it.
++        </p>
++      </section>
++
++      <div className={`${container} flex flex-col gap-8 md:gap-12`}>
++        {caseStudies.map((c, i) => (
++          <Reveal key={c.id}>
++            <CaseStudyCard study={c} index={i + 1} />
++          </Reveal>
++        ))}
++      </div>
++
++      <section className={`${container} py-16 md:py-24`}>
++        <h2 className={`${sectionHeading} mb-6`}>Writing samples</h2>
++        <ul className="border-t border-border">
++          {writingSamples.map((s, i) => (
++            <li
++              key={i}
++              className="flex flex-wrap justify-between gap-x-6 gap-y-1 border-b border-border py-4"
++            >
++              {isTodo(s.href) ? (
++                <span className="font-semibold">
++                  <Fill value={s.title} />
++                </span>
++              ) : (
++                <a
++                  href={s.href}
++                  target="_blank"
++                  rel="noopener noreferrer"
++                  className="font-semibold text-brand hover:text-brand-dark"
++                >
++                  <Fill value={s.title} />
++                </a>
++              )}
++              <span className="text-muted-foreground">{s.source}</span>
++            </li>
++          ))}
++        </ul>
++      </section>
++    </>
++  );
++}
++
++function CaseStudyCard({ study: c, index }: { study: CaseStudy; index: number }) {
++  const num = String(index).padStart(2, "0");
++
++  if (c.pending) {
++    return (
++      <article
++        id={c.id}
++        className="scroll-mt-24 rounded-2xl border-2 border-dashed border-input p-6 md:p-10"
++      >
++        <p className={`${eyebrow} mb-3`}>
++          {num} · {c.eyebrow}
++        </p>
++        <h2 className="mb-3 font-display text-2xl font-bold md:text-3xl">{c.title}</h2>
++        <p className="text-muted-foreground">
++          <Fill value={c.context} />
++        </p>
++      </article>
++    );
++  }
++
++  return (
++    <article
++      id={c.id}
++      className="flex scroll-mt-24 flex-col gap-8 rounded-2xl border border-border bg-surface p-6 md:p-12"
++    >
++      <div>
++        <p className={`${eyebrow} mb-3`}>
++          {num} · {c.eyebrow}
++        </p>
++        <h2 className="mb-3 font-display text-[clamp(1.75rem,3.5vw,2.375rem)] font-bold leading-tight">
++          {c.title}
++        </h2>
++        <p className="max-w-3xl text-muted-foreground">
++          <Fill value={c.context} />
++        </p>
++      </div>
++
++      {c.stats && (
++        <dl className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
++          {c.stats.map((s) => (
++            <div key={s.label} className="rounded-xl bg-brand-soft p-4 md:p-5">
++              <dt className="sr-only">{s.label}</dt>
++              <dd className="font-display text-3xl font-bold leading-tight md:text-[2.125rem]">
++                {s.value}
++              </dd>
++              <dd className="text-[15px] text-accent-foreground">{s.label}</dd>
++            </div>
++          ))}
++        </dl>
++      )}
++
++      <div className="grid gap-8 md:grid-cols-[3fr_2fr] md:gap-10">
++        <div>
++          <h3 className="mb-3 text-xl font-semibold">What I did</h3>
++          <ul className="flex list-disc flex-col gap-2 pl-5 text-muted-foreground">
++            {c.did.map((d) => (
++              <li key={d}>{d}</li>
++            ))}
++          </ul>
++        </div>
++        <div>
++          <h3 className="mb-3 text-xl font-semibold">{c.sideTitle}</h3>
++          <ul className="mb-6 flex flex-col gap-2 text-muted-foreground">
++            {c.side.map((s, i) => (
++              <li key={i}>
++                <Fill value={s} />
++              </li>
++            ))}
++          </ul>
++          {c.extraTitle && (
++            <>
++              <h3 className="mb-3 text-xl font-semibold">{c.extraTitle}</h3>
++              <p className="text-muted-foreground">{c.extra}</p>
++            </>
++          )}
++        </div>
++      </div>
++
++      {c.links && c.links.length > 0 && (
++        <div className="flex flex-wrap gap-3 border-t border-border pt-6">
++          {c.links.map((l) => (
++            <a
++              key={l.href}
++              href={l.href}
++              target="_blank"
++              rel="noopener noreferrer"
++              className={button({ variant: l.primary ? "primary" : "outline", size: "md" })}
++            >
++              {l.label}
++            </a>
++          ))}
++        </div>
++      )}
++    </article>
++  );
++}
+diff --git a/components/ui.ts b/components/ui.ts
+new file mode 100644
+index 0000000..832913f
+--- /dev/null
++++ b/components/ui.ts
+@@ -0,0 +1,32 @@
++import { cva } from "class-variance-authority";
++
++/** Shared button/link styles for the portfolio pages. */
++export const button = cva(
++  "inline-flex items-center justify-center gap-2 rounded-lg border-[1.5px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60",
++  {
++    variants: {
++      variant: {
++        primary: "border-transparent bg-brand text-brand-foreground hover:bg-brand-dark",
++        dark: "border-transparent bg-primary text-primary-foreground hover:bg-brand-dark",
++        outline: "border-foreground text-foreground hover:bg-foreground hover:text-background",
++        light: "border-transparent bg-white text-foreground hover:bg-border",
++        outlineLight: "border-white text-white hover:bg-white hover:text-foreground",
++      },
++      size: {
++        md: "h-11 px-5 text-[15px]",
++        lg: "h-12 px-6 text-base",
++      },
++    },
++    defaultVariants: { variant: "primary", size: "lg" },
++  },
++);
++
++/** Page-width container used by the redesigned pages. */
++export const container = "mx-auto w-full max-w-6xl px-6";
++
++export const eyebrow = "font-mono text-xs uppercase tracking-[0.07em] text-brand";
++export const label = "font-mono text-xs uppercase tracking-[0.06em] text-muted-foreground";
++export const displayHeading =
++  "font-display text-[clamp(2.5rem,6vw,3.75rem)] font-bold leading-[1.05] tracking-tight";
++export const sectionHeading =
++  "font-display text-[clamp(1.75rem,4vw,2.5rem)] font-bold tracking-tight";
+diff --git a/content/portfolio.ts b/content/portfolio.ts
+new file mode 100644
+index 0000000..5666883
+--- /dev/null
++++ b/content/portfolio.ts
+@@ -0,0 +1,293 @@
++/**
++ * All portfolio copy lives here, so content can be updated without
++ * touching layout code.
++ *
++ * Unfinished content is marked with todo("…"). It renders as a yellow
++ * highlight on the site so it is easy to spot. Run `npm run check:content`
++ * to list everything still to fill in; it must report zero before the
++ * redesign goes live.
++ */
++
++export type Todo = { todo: string };
++export type Fill = string | Todo;
++
++export const todo = (note: string): Todo => ({ todo: note });
++export const isTodo = (value: Fill): value is Todo =>
++  typeof value === "object" && value !== null && "todo" in value;
++
++/* ------------------------------------------------------------------ */
++/* Site                                                                */
++/* ------------------------------------------------------------------ */
++
++export const site = {
++  name: "Aduragbemi Aleem",
++  role: "SEO, AEO & GEO Strategist",
++  url: "https://adr-portfolio-omega.vercel.app",
++  description:
++    "SEO, AEO and GEO strategist helping tech and AI brands rank on Google and get cited by AI. Co-author of the Eng-PidginEdu NLP dataset.",
++  email: "aduragbemialeem@gmail.com",
++  location: "Lagos, Nigeria",
++  yearsOfExperience: todo("8+") as Fill,
++  /**
++   * Path to the CV, e.g. "/cv.pdf" once the file is added to /public.
++   * While null, every "Download CV" button is hidden so no link 404s.
++   */
++  cvPath: null as string | null,
++};
++
++export const links = {
++  linkedin: "https://www.linkedin.com/in/aduragbemialeem",
++  tiktok: "https://www.tiktok.com/@the_beanie_guy",
++  instagram: "https://www.instagram.com/a_aduragbemi/",
++  x: "https://x.com/Aduragbemi_AE",
++  medium: "https://medium.com/@ADR-HUB",
++  whatsappCall:
++    "https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call.",
++  whatsappSupport:
++    "https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem!%20I%20want%20to%20support%20what%20you%20do.%20Can%20you%20tell%20me%20how%20I%20can%20help%3F",
++};
++
++/* ------------------------------------------------------------------ */
++/* Home                                                                */
++/* ------------------------------------------------------------------ */
++
++export const proofPoints = [
++  { label: "Currently", value: "Senior Content Manager, Ridima" },
++  { label: "Currently", value: "SEO/AEO/GEO Manager, Rankova" },
++  { label: "Recognition", value: "Top 50 Poster, Deep Learning Indaba 2026" },
++];
++
++export const pillars = [
++  {
++    title: "SEO strategy",
++    text: "Keyword research, internal linking, technical SEO and content planning built around how buyers actually search.",
++  },
++  {
++    title: "AI search (AEO/GEO)",
++    text: "Content structured to be understood and cited by ChatGPT, Perplexity and Google AI Overviews.",
++  },
++  {
++    title: "Technical content",
++    text: "Turning complex fintech, Web3 and AI products into clear writing that ranks and converts.",
++  },
++];
++
++export const sampleSources = [
++  { label: "Ridima blog", href: "https://www.myridima.com/blogs" },
++  { label: "Rankova blog", href: "https://rankovahq.com/blog/" },
++  { label: "Medium", href: links.medium },
++];
++
++/* ------------------------------------------------------------------ */
++/* Work                                                                */
++/* ------------------------------------------------------------------ */
++
++export type CaseStudy = {
++  id: string;
++  eyebrow: string;
++  title: string;
++  /** Short version for the Home page card. */
++  summary: Fill[];
++  context: Fill;
++  stats?: { value: string; label: string }[];
++  did: string[];
++  sideTitle: string;
++  side: Fill[];
++  extraTitle?: string;
++  extra?: string;
++  links?: { label: string; href: string; primary?: boolean }[];
++  /** Shown as a dashed "coming soon" card while true. */
++  pending?: boolean;
++};
++
++export const caseStudies: CaseStudy[] = [
++  {
++    id: "eng-pidginedu",
++    eyebrow: "NLP research · TAG Ecosystem · Oct 2025 – Present",
++    title: "Eng-PidginEdu: an English–Nigerian Pidgin educational translation dataset",
++    summary: [
++      "Helped build the data pipeline behind an English–Nigerian Pidgin translation dataset of 26,232 validated sentence pairs. Recognised at Deep Learning Indaba 2026 and WiML @ ICML 2026.",
++    ],
++    context:
++      "Nigerian Pidgin has tens of millions of speakers but very little NLP data, especially for educational and technical content. The team set out to build a dataset that could train a translation model for students.",
++    stats: [
++      { value: "26,232", label: "validated sentence pairs" },
++      { value: "1.09M", label: "tokens" },
++      { value: "13,634", label: "glossary entries" },
++      { value: "8", label: "academic subjects" },
++    ],
++    did: [
++      "Collected educational source material and used Python to extract text from PDFs",
++      "Cleaned and prepared raw text for machine translation",
++      "Ran batch translations with the Davlan/mT5 English–Pidgin model, managing multi-hour jobs within GPU limits",
++      "Reviewed and corrected model output as part of the human-in-the-loop quality control process",
++      "Documented the full pipeline as a repeatable guide and presented it to the TAG community",
++    ],
++    sideTitle: "Recognition",
++    side: [
++      "Top 50 Poster Award, Deep Learning Indaba 2026",
++      "Poster accepted, WiML Symposium @ ICML 2026, Seoul",
++    ],
++    extraTitle: "What it taught me",
++    extra:
++      "Model output is not ground truth. Getting language data right takes human review, and that is the same instinct I bring to content written for AI search.",
++    links: [
++      { label: "View poster", href: "https://www.tagecosystemai.com/dli-poster.jpg", primary: true },
++      { label: "Dataset on Hugging Face", href: "https://huggingface.co/datasets/coderGit/Eng_PidginEdu" },
++      {
++        label: "My write-up",
++        href: "https://www.linkedin.com/feed/update/urn:li:activity:7501192298739802112/",
++      },
++    ],
++  },
++  {
++    id: "ridima",
++    eyebrow: "SEO content · Ridima · Feb 2024 – Present",
++    title: "SEO content strategy for a fintech blog",
++    summary: [
++      "SEO content strategy, internal linking and AI-citation-ready articles for a fintech product.",
++      todo("One measurable result"),
++    ],
++    context: todo(
++      "Context: what Ridima does, the state of the blog when you joined, and the goal you were given",
++    ),
++    did: [
++      "Built the content plan around high-intent keywords",
++      "Set up internal linking to strengthen topical authority",
++      "Wrote educational fintech articles structured for both Google and AI answer engines",
++      "Repurposed long-form articles into social and newsletter content",
++    ],
++    sideTitle: "Results",
++    side: [
++      todo("Real metric, e.g. organic traffic change over a set period"),
++      todo("Second metric, e.g. keywords on page one, or a Search Console screenshot"),
++    ],
++    links: [{ label: "Read the blog", href: "https://www.myridima.com/blogs" }],
++  },
++  {
++    id: "web3",
++    eyebrow: "Technical writing · Freelance · 2018 – 2024",
++    title: "Launch content for Web3 and SaaS products",
++    summary: [
++      "Whitepapers, landing pages and launch content explaining tokenomics and roadmaps for ETFSwap, WallitIQ and other projects.",
++    ],
++    context:
++      "Early-stage products needed to explain complex mechanics, such as tokenomics, roadmaps and product value, to people deciding whether to trust them.",
++    did: [
++      "Wrote whitepapers, landing pages and blog posts for ETFSwap, WallitIQ and other Web3 projects",
++      "Wrote SEO articles and website copy for Cr3st, BidX and ConvertedIn",
++    ],
++    sideTitle: "Samples",
++    side: [todo("2–3 links to live pages or PDFs you wrote")],
++  },
++  {
++    id: "rankova",
++    eyebrow: "AI search · Rankova · Apr 2026 – Present",
++    title: "SEO and AI-search optimisation for client brands",
++    summary: [],
++    context: todo(
++      "Add once you have one client result: the brand or industry, what you changed, and what moved",
++    ),
++    did: [],
++    sideTitle: "",
++    side: [],
++    pending: true,
++  },
++];
++
++/** The three case studies featured on the Home page, in order. */
++export const featuredCaseIds = ["eng-pidginedu", "ridima", "web3"];
++
++export const homeCardEyebrows: Record<string, string> = {
++  "eng-pidginedu": "NLP research · TAG Ecosystem",
++  ridima: "SEO content · Fintech",
++  web3: "Technical writing · Web3",
++};
++
++export const homeCardTitles: Record<string, string> = {
++  "eng-pidginedu": "Eng-PidginEdu dataset",
++  ridima: "Ridima blog strategy",
++  web3: "Web3 launch content",
++};
++
++export const writingSamples: { title: Fill; source: string; href: Fill }[] = [
++  { title: todo("Article title"), source: "Ridima", href: todo("link") },
++  { title: todo("Article title"), source: "Ridima", href: todo("link") },
++  { title: todo("Article title"), source: "Rankova", href: todo("link") },
++  { title: todo("Article title"), source: "Medium", href: todo("link") },
++];
++
++/* ------------------------------------------------------------------ */
++/* About                                                               */
++/* ------------------------------------------------------------------ */
++
++export const experience: { dates: string; role: Fill; org: string; text: string }[] = [
++  {
++    dates: "Apr 2026 – Present",
++    role: "SEO/AEO/GEO Manager",
++    org: "Rankova",
++    text: "SEO and AI-search strategy, technical SEO and content for client brands.",
++  },
++  {
++    dates: "Oct 2025 – Present",
++    role: "NLP Data & Research Contributor",
++    org: "TAG Ecosystem",
++    text: "Co-author, Eng-PidginEdu dataset. Top 50 Poster, Deep Learning Indaba 2026.",
++  },
++  {
++    dates: "Feb 2024 – Present",
++    role: "Senior Content Manager",
++    org: "Ridima",
++    text: "SEO content strategy, internal linking and educational fintech content.",
++  },
++  {
++    dates: "Jul 2024 – Jun 2026",
++    role: todo("Convener / Content Director"),
++    org: "ADR Hub",
++    text: "Led content and SEO for client projects; trained and mentored writers.",
++  },
++  {
++    dates: "Sep 2024 – Dec 2024",
++    role: "Content Manager",
++    org: "uPay",
++    text: "SEO articles, on-page optimisation and content repurposing.",
++  },
++  {
++    dates: "Feb 2018 – Jul 2024",
++    role: "Freelance Technical Writer",
++    org: "Self-employed",
++    text: "Whitepapers, landing pages and SEO content for Web3 and SaaS clients.",
++  },
++];
++
++export const skills = [
++  {
++    title: "SEO",
++    text: "Keyword research · competitor analysis · internal linking · on-page and technical SEO",
++  },
++  {
++    title: "AI search",
++    text: "Answer engine optimisation (AEO) · generative engine optimisation (GEO)",
++  },
++  {
++    title: "Content",
++    text: "Content strategy · technical writing · editorial planning · mentoring writers",
++  },
++  {
++    title: "Technical",
++    text: "Python · PDF text extraction · data cleaning for NLP · Hugging Face",
++  },
++];
++
++export const education = {
++  degree: "BSc Botany / Plant Biology",
++  school: "Obafemi Awolowo University · 2014 – 2018",
++};
++
++export const certifications = [
++  "AWS Educate Machine Learning Foundations",
++  "Introducing Generative AI with AWS",
++  "Introduction to Artificial Intelligence",
++];
++
++export const languages: Fill[] = ["English · French ", todo("pick one level")];
+diff --git a/lib/metadata.ts b/lib/metadata.ts
+new file mode 100644
+index 0000000..e2865a8
+--- /dev/null
++++ b/lib/metadata.ts
+@@ -0,0 +1,31 @@
++import type { Metadata } from "next";
++import { site } from "@/content/portfolio";
++
++/**
++ * Builds complete metadata for a page. Next.js replaces (does not merge)
++ * nested objects like `openGraph` between layout and page, so each page
++ * gets the full set here rather than a partial override.
++ */
++export function pageMetadata({
++  title,
++  description,
++  path,
++}: {
++  title: string;
++  description: string;
++  path: string;
++}): Metadata {
++  return {
++    title,
++    description,
++    alternates: { canonical: path },
++    openGraph: {
++      type: "website",
++      siteName: site.name,
++      title: `${title} | ${site.name}`,
++      description,
++      url: path,
++      images: [{ url: "/images/ADR.jpeg", alt: site.name }],
++    },
++  };
++}
+diff --git a/package.json b/package.json
+index 3558212..fd83829 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,8 @@
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
+-    "lint": "eslint"
++    "lint": "eslint",
++    "check:content": "node scripts/check-content.mjs"
+   },
+   "dependencies": {
+     "@formspree/react": "^3.0.0",
+diff --git a/scripts/check-content.mjs b/scripts/check-content.mjs
+new file mode 100644
+index 0000000..91fdf57
+--- /dev/null
++++ b/scripts/check-content.mjs
+@@ -0,0 +1,30 @@
++// Lists unfinished portfolio content. Exits with code 1 if anything is left.
++// Usage: npm run check:content
++import { readFileSync } from "node:fs";
++
++const file = new URL("../content/portfolio.ts", import.meta.url);
++const lines = readFileSync(file, "utf8").split("\n");
++
++const problems = [];
++lines.forEach((line, i) => {
++  if (line.includes("export const todo")) return;
++  if (/^\s*(\/\/|\/\*|\*)/.test(line)) return; // skip comments
++  for (const m of line.matchAll(/\btodo\("([^"]*)"\)/g)) {
++    problems.push(`content/portfolio.ts:${i + 1}  ${m[1]}`);
++  }
++  // todo( with its text on the following line
++  if (/\btodo\(\s*$/.test(line)) {
++    const note = lines[i + 1]?.trim().replace(/^"|",?$/g, "");
++    problems.push(`content/portfolio.ts:${i + 1}  ${note}`);
++  }
++  if (/cvPath:\s*null/.test(line)) {
++    problems.push(`content/portfolio.ts:${i + 1}  cvPath is not set (add public/cv.pdf, then set cvPath: "/cv.pdf")`);
++  }
++});
++
++if (problems.length) {
++  console.log(`${problems.length} item(s) still to fill in:\n`);
++  for (const p of problems) console.log(`  - ${p}`);
++  process.exit(1);
++}
++console.log("All portfolio content is filled in.");
+-- 
+2.43.0
+

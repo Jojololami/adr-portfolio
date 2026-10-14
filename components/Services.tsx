@@ -1,20 +1,36 @@
-import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Section from "@/components/Section";
 import WaitlistForm from "@/components/WaitlistForm";
 import MediumBlog from "@/components/MediumBlog";
 import Reveal from "@/components/Reveal";
+import Faq, { type FaqItem } from "@/components/Faq";
 
-export const metadata: Metadata = {
-  title: "Services | ADR Hub",
-  description:
-    "Helping businesses and professionals grow through AI integration, SEO, content marketing, and career coaching.",
-  openGraph: {
-    title: "Services | ADR Hub",
-    description:
-      "Explore the digital services I offer to help you grow your business and career.",
+// Page metadata now lives in app/services/page.tsx (Next.js ignored it here).
+
+// Moved from the old Home page. These questions are about services, so they live here now.
+const faqs: FaqItem[] = [
+  {
+    q: "Who is Aduragbemi Aleem?",
+    a: "I am a digital professional with expertise in content management, digital marketing, and AI integration. I am passionate about helping businesses and individuals thrive in the digital age.",
   },
-};
+  {
+    q: "What services do I offer?",
+    a: "I offer a range of services including AI integration, SEO/GEO/AEO management, and content marketing. Each service is designed to help your business gain visibility, drive growth, and thrive in the digital age. Based on your business needs, I can provide tailored solutions to help you achieve your goals.",
+  },
+  {
+    q: "How much do my services cost?",
+    a: "My pricing varies depending on the scope and complexity of the project. I offer competitive rates and can provide a detailed quote after discussing your specific needs and requirements.",
+  },
+  {
+    q: "Why should you trust me?",
+    a: "I come with a proven track record of delivering results for clients across various industries. My expertise, dedication, and commitment to your success make me a reliable partner for your digital needs.",
+  },
+  {
+    q: "Can you provide proof of your work and results?",
+    a: "Yes, I can provide case studies, testimonials, and examples of my previous work to demonstrate the results I have achieved for clients. I am happy to share this information upon request.",
+  },
+];
 
 const services = [
   {
@@ -80,10 +96,15 @@ export default function Services() {
                   {service.description}
                 </p>
 
-                <button className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5">
+                {/* Previously a <button> with no handler; now goes to the contact page. */}
+                <Link
+                  href="/contact"
+                  className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:-translate-y-0.5"
+                >
                   Learn More
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                  <span className="sr-only"> about {service.title}</span>
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </div>
             </Reveal>
           ))}
@@ -117,6 +138,10 @@ export default function Services() {
       </Section>
 
       <MediumBlog />
+
+      <Reveal>
+        <Faq items={faqs} />
+      </Reveal>
     </>
   );
 }

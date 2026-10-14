@@ -1,325 +1,202 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import MediumBlog from "@/components/MediumBlog"
-import {
-  ArrowRight,
-  Sparkles,
-  Code2,
-  // Palette,
-  Megaphone,
-  Briefcase,
-  Users,
-  Zap,
-  Globe2,
-  Bot,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
-import Section from "@/components/Section";
 import Reveal from "@/components/Reveal";
-
+import Fill from "@/components/Fill";
+import { button, container, displayHeading, eyebrow, label, sectionHeading } from "@/components/ui";
+import {
+  caseStudies,
+  featuredCaseIds,
+  homeCardEyebrows,
+  homeCardTitles,
+  links,
+  pillars,
+  proofPoints,
+  sampleSources,
+  site,
+} from "@/content/portfolio";
 
 const Home = () => {
   return (
     <>
-    <Hero />      
-
-<Reveal>
-  <Programs />
-</Reveal>
-
-<Reveal>
-  <WhyADR />
-</Reveal>
-
-<Reveal>
-  <Community />
-</Reveal>
-
-<Reveal>
-  <MediumBlog />
-</Reveal>
-
-<Reveal>
-  <FAQ />
-</Reveal>
-
-<Reveal>
-  <FinalCTA />
-</Reveal>
+      <Hero />
+      <ProofStrip />
+      <Reveal>
+        <SelectedWork />
+      </Reveal>
+      <Reveal>
+        <WhatIDo />
+      </Reveal>
+      <Reveal>
+        <WritingSamples />
+      </Reveal>
+      <FinalCTA />
     </>
   );
 };
 
-const programs = [
-  {
-    slug: "ai-human-integrator",
-    icon: <Sparkles className="h-6 w-6" />,
-    title: "AI Human Integrator",
-    tagline: "Learn to integrate AI into your workflows, projects, and career for maximum impact.",
-  },
-  {
-    slug: "SEO-GEO-AEO-manager",
-    icon: <Code2 className="h-6 w-6" />,
-    title: "SEO/GEO/AEO Manager",
-    tagline: "Master search engine optimization, growth, and analytics for global reach. ",
-  },
-  {
-    slug: "content-marketer",
-    icon: <Megaphone className="h-6 w-6" />,
-    title: "Content Marketer",
-    tagline: "Create compelling content that drives engagement and conversions.",
-  },
-  {
-    slug: "career-coach",
-    icon: <Briefcase className="h-6 w-6" />,
-    title: "Career Coach",
-    tagline: "Navigate your career path with confidence and clarity.",
-  },
- 
-];
-
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
-
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 md:grid-cols-2 md:py-32">
-        <div>
-
-          <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl">
-           Meet Aduragbemi{" "}
-            <span className="text-gradient">Aleem.</span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Aduragbemi Aleem is a digital professional with a passion for creating innovative solutions that leverage technology to solve real-world problems. With expertise in content management, digital marketing, and AI integration, Aduragbemi is dedicated to helping businesses and individuals thrive in the digital age.
-          </p>
+    <section className={`${container} flex flex-col gap-10 py-12 md:flex-row md:items-center md:gap-14 md:py-24`}>
+      <div className="min-w-0 md:flex-[3]">
+        <p className={`${eyebrow} mb-5`}>SEO · AEO · GEO Strategist</p>
+        <h1 className={`${displayHeading} mb-6`}>
+          I help tech and AI brands get found on Google and cited by AI.
+        </h1>
+        <p className="mb-8 max-w-xl text-lg text-muted-foreground md:text-xl">
+          <Fill value={site.yearsOfExperience} /> years writing and managing content for fintech,
+          Web3 and AI companies. Co-author of an NLP dataset recognised at Deep Learning Indaba 2026.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/work" className={button()}>
+            View my work
+          </Link>
+          {site.cvPath ? (
+            <a href={site.cvPath} download className={button({ variant: "outline" })}>
+              Download CV
+            </a>
+          ) : (
+            <Link href="/contact" className={button({ variant: "outline" })}>
+              Get in touch
+            </Link>
+          )}
         </div>
+      </div>
 
-        <div className="relative">
-          <div className="absolute -inset-4 rounded-3xl bg-gradient-brand opacity-20 blur-3xl" />
-
-          <Image
-            src="/images/ADR.jpeg"
-            alt="AI-powered learning visualization"
-            width={1024}
-            height={1024}
-            className="relative aspect-square w-full rounded-3xl border border-border object-cover"
-            priority
-          />
-        </div>
+      <div className="min-w-0 md:flex-[2]">
+        <Image
+          src="/images/ADR.jpeg"
+          alt={`Portrait of ${site.name}`}
+          width={720}
+          height={1080}
+          priority
+          sizes="(min-width: 768px) 40vw, 100vw"
+          className="aspect-[4/5] max-h-[440px] w-full rounded-2xl border border-border object-cover object-top"
+        />
       </div>
     </section>
   );
 }
 
-function Programs() {
+function ProofStrip() {
   return (
-    <Section
-  eyebrow="Services"
-  title="What Aduragbemi Does"
-  subtitle="Each service focuses on helping your business gain visibility, drive growth, and thrive in the digital age."
->
-  <div className="grid gap-6 md:grid-cols-2">
-    {programs.map((program) => (
-      <div
-        key={program.slug}
-        className="surface-card flex flex-col p-8 transition-all hover:-translate-y-1 hover:border-brand/50"
-      >
-        <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand text-xl text-brand-foreground shadow-glow">
-          {program.icon}
-        </div>
-
-        <h3 className="font-display text-xl font-semibold">
-          {program.title}
-        </h3>
-
-        <p className="mt-2 text-sm text-muted-foreground">
-          {program.tagline}
-        </p>
-      </div>
-    ))}
-  </div>
-</Section>
-  );
-}
-
-const reasons = [
-  {
-    icon: Bot,
-    title: "AI-Driven Solutions",
-    desc: "I help businesses integrate AI into their workflows to improve productivity, automate repetitive tasks, and create better digital experiences.",
-  },
-  {
-    icon: Zap,
-    title: "Visibility That Converts",
-    desc: "From SEO to GEO and AEO, I build strategies that help brands get discovered by both search engines and AI-powered platforms.",
-  },
-  {
-    icon: Users,
-    title: "Strategy Meets Execution",
-    desc: "I don't just create plans. I execute them, delivering content, systems, and digital solutions that produce measurable results.",
-  },
-  {
-    icon: Globe2,
-    title: "Career Growth Guidance",
-    desc: "Whether you're breaking into tech, switching careers, or positioning yourself for new opportunities, I provide practical guidance to help you build a clear path forward.",
-  },
-];
-
-function WhyADR() {
-  return (
-    <Section
-      title="Why Aduragbemi Aleem?"
-      subtitle="I combine technical expertise, strategic thinking, and practical execution to deliver solutions that create real business impact."
-     
->
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {reasons.map((reason) => (
-          <div key={reason.title} className="surface-card p-6">
-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-accent2">
-              <reason.icon className="h-5 w-5" />
-            </div>
-
-            <h3 className="mt-4 font-display text-lg font-semibold">
-              {reason.title}
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {reason.desc}
-            </p>
+    <section aria-label="Current roles and recognition" className="border-y border-border bg-surface">
+      <div className={`${container} grid gap-5 py-7 sm:grid-cols-3 sm:gap-10`}>
+        {proofPoints.map((p) => (
+          <div key={p.value}>
+            <p className={label}>{p.label}</p>
+            <p className="mt-1 font-semibold">{p.value}</p>
           </div>
         ))}
       </div>
-    </Section>
+    </section>
   );
 }
 
+function SelectedWork() {
+  const featured = featuredCaseIds
+    .map((id) => caseStudies.find((c) => c.id === id))
+    .filter((c) => c !== undefined);
 
-function Community() {
   return (
-    <Section>
-      <div className="surface-card relative overflow-hidden p-10 md:p-16">
-        <div className="absolute inset-0 bg-hero-glow opacity-60" />
-
-        <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto]">
-          <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-accent2">
-              Newsletter
-            </p>
-
-            <h2 className="font-display text-3xl font-bold tracking-tight md:text-5xl">
-              Subscribe to my Newsletter
-            </h2>
-
-            <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-              Be the first to know about the latest insights, tips, and updates on digital marketing, AI integration, and content management.
-            </p>
-          </div>
-
-          <Link
-            href="/community"
-            className="inline-flex h-12 items-center justify-center gap-2 self-start rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
-          >
-            Subscribe
-
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+    <section className={`${container} py-16 md:py-24`}>
+      <div className="mb-9 flex flex-wrap items-baseline justify-between gap-4">
+        <h2 className={sectionHeading}>Selected work</h2>
+        <Link href="/work" className="font-semibold text-brand hover:text-brand-dark">
+          All case studies →
+        </Link>
       </div>
-    </Section>
-  );
-}
-
-
-const faqs = [
-  {
-    q: "Who is Aduragbemi Aleem?",
-    a: "I am a digital professional with expertise in content management, digital marketing, and AI integration. I am passionate about helping businesses and individuals thrive in the digital age.",
-  },
-  {
-    q: "What services do I offer?",
-    a: "I offer a range of services including AI integration, SEO/GEO/AEO management, and content marketing. Each service is designed to help your business gain visibility, drive growth, and thrive in the digital age. Based on your business needs, I can provide tailored solutions to help you achieve your goals.",
-  },
-  {
-    q: "How much do my services cost",
-    a: "My pricing varies depending on the scope and complexity of the project. I offer competitive rates and can provide a detailed quote after discussing your specific needs and requirements.",
-  },
-  {
-    q: "Why should your trust me?",
-    a: "I come with a proven track record of delivering results for clients across various industries. My expertise, dedication, and commitment to your success make me a reliable partner for your digital needs.",
-  },
-  {
-    q: "Can you provide proof of your work and results?",
-    a: "Yes, I can provide case studies, testimonials, and examples of my previous work to demonstrate the results I have achieved for clients. I am happy to share this information upon request.",
-  },
-];
-
-const FAQ = () => {
-  const [open, setOpen] = useState<number | null>(0);
-
-  return (
-    <Section eyebrow="FAQ" title="Questions, answered." align="center">
-      <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface/40">
-        {faqs.map((faq, index) => (
-          <button
-            key={faq.q}
-            onClick={() => setOpen(open === index ? null : index)}
-            className="flex w-full flex-col px-6 py-5 text-left"
+      <div className="grid gap-6 md:grid-cols-3">
+        {featured.map((c) => (
+          <article
+            key={c.id}
+            className="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-6 md:p-7"
           >
-            <div className="flex items-center justify-between gap-4">
-              <span className="font-display text-base font-semibold">
-                {faq.q}
-              </span>
-
-              <ChevronDown
-                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
-                  open === index ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-
-            {open === index && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                {faq.a}
-              </p>
-            )}
-          </button>
-        ))}
-      </div>
-    </Section>
-  );
-};
-
-const FinalCTA = () => {
-  return (
-    <Section>
-      <div className="surface-card relative overflow-hidden p-12 text-center md:p-20">
-        <div className="absolute inset-0 bg-hero-glow" />
-
-        <div className="relative">
-          <h2 className="mx-auto max-w-3xl font-display text-4xl font-bold tracking-tight md:text-6xl">
-            Your digital future{" "}
-            <span className="text-gradient">starts here.</span>
-          </h2>
-
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-
+            <p className={eyebrow}>{homeCardEyebrows[c.id]}</p>
+            <h3 className="font-display text-2xl font-bold leading-tight">{homeCardTitles[c.id]}</h3>
+            <p className="text-muted-foreground">
+              {c.summary.map((s, i) => (
+                <span key={i}>
+                  {i > 0 && " "}
+                  <Fill value={s} />
+                </span>
+              ))}
+            </p>
             <Link
-              href="/contact"
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-6 text-sm font-semibold text-foreground hover:bg-surface-elevated"
+              href={`/work#${c.id}`}
+              className="mt-auto inline-flex items-center gap-1 font-semibold text-brand hover:text-brand-dark"
             >
-              Talk to me at no cost  <ArrowRight className="h-4 w-4" />
+              Read case study <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WhatIDo() {
+  return (
+    <section className={`${container} pb-16 md:pb-24`}>
+      <h2 className={`${sectionHeading} mb-9`}>What I do</h2>
+      <div className="grid gap-8 md:grid-cols-3 md:gap-10">
+        {pillars.map((p) => (
+          <div key={p.title} className="border-t-2 border-foreground pt-5">
+            <h3 className="mb-2.5 text-xl font-semibold">{p.title}</h3>
+            <p className="text-muted-foreground">{p.text}</p>
           </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WritingSamples() {
+  return (
+    <section className={`${container} pb-16 md:pb-24`}>
+      <h2 className="mb-6 font-display text-2xl font-bold md:text-3xl">Writing samples</h2>
+      <div className="flex flex-wrap gap-3">
+        {sampleSources.map((s) => (
+          <a
+            key={s.href}
+            href={s.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-5 py-3 font-medium text-brand hover:border-brand"
+          >
+            {s.label} <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FinalCTA() {
+  return (
+    <section className="bg-primary text-primary-foreground">
+      <div className={`${container} flex flex-col gap-8 py-14 md:flex-row md:items-center md:justify-between md:py-20`}>
+        <div>
+          <h2 className={`${sectionHeading} mb-3`}>Hiring for SEO, content or AI-search roles?</h2>
+          <p className="text-lg text-primary-foreground/80">I&apos;d like to hear about it.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <a href={`mailto:${site.email}`} className={button({ variant: "light" })}>
+            Email me
+          </a>
+          <a
+            href={links.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={button({ variant: "outlineLight" })}
+          >
+            LinkedIn
+          </a>
         </div>
       </div>
-    </Section>
+    </section>
   );
-};
+}
 
 export default Home;

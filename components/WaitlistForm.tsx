@@ -82,7 +82,8 @@ const WaitlistForm = ({
   value={email}
   onChange={(e) => setEmail(e.target.value)}
   placeholder="your@email.com"
-  className="h-12 w-full min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 sm:text-sm"
+  aria-label="Email address"
+  className="h-12 w-full min-w-0 flex-1 rounded-xl border border-input bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 sm:text-sm"
 />
 
   <button

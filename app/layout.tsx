@@ -1,26 +1,49 @@
-import type { Metadata } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import type { Viewport } from "next";
+import { site } from "@/content/portfolio";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
 
-const inter = Inter({
+// Variable names are read by the @theme block in globals.css
+// (--font-sans, --font-display and --font-mono point at these).
+const body = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-body",
 });
 
-const interTight = Inter_Tight({
+const heading = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-heading",
+});
+
+const code = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: "--font-code",
 });
 
 export const metadata: Metadata = {
-  title: "ADR Portfolio",
-  description: "Built by Jojololami",
+  metadataBase: new URL(site.url),
+  title: {
+    default: `${site.name} | ${site.role}`,
+    template: `%s | ${site.name}`,
+  },
+  description: site.description,
+  openGraph: {
+    type: "website",
+    siteName: site.name,
+    title: `${site.name} | ${site.role}`,
+    description: site.description,
+    url: "/",
+    images: [{ url: "/images/ADR.jpeg", alt: site.name }],
+  },
+  twitter: {
+    card: "summary",
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${interTight.variable} h-full antialiased`}
+      className={`${body.variable} ${heading.variable} ${code.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
