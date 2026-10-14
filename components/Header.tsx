@@ -46,17 +46,17 @@ const Header = () => {
             >
               {item.label}
             </Link>
+            
           ))}
 
-          {site.cvPath && (
-            <a
-              href={site.cvPath}
-              download
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-brand-dark"
-            >
-              Download CV
-            </a>
-          )}
+        
+  <a
+    href={"/cv.pdf"}
+    download
+    className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-brand-dark"
+  >
+    Download CV
+  </a>
         </nav>
 
         <button
