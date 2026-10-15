@@ -1,174 +1,142 @@
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, Target, Compass, BookOpen, Users } from "lucide-react";
-import Section from "./Section";
+import { ArrowRight } from "lucide-react";
 
-const philosophy = [
-  {
-    icon: Target,
-    title: "Professional excellence",
-    desc: "Every lesson leads to something you can ship, share, or sell.",
-  },
-  {
-    icon: Compass,
-    title: "Premium Services",
-    desc: "(Free content review, seo audit, career mentorship.) AI is woven into every program — not an elective.",
-  },
-  {
-    icon: BookOpen,
-    title: "News and education",
-    desc: "Learn alongside peers with real human feedback.",
-  },
-  {
-    icon: Users,
-    title: "Accountability and guidance",
-    desc: "Accountability and opportunities come from the people around you.",
-  },
-];
-
-const roadmap = [
-  {
-    q: "1",
-    title: "Contact Us",
-    detail: "AI Content Creation begins. Waitlist opens.",
-  },
-  {
-    q: "2",
-    title: "Free Audit",
-    detail: "Second wave of cohorts launches.",
-  },
-  {
-    q: "3",
-    title: "Deliver technical strategy for your brand",
-    detail:
-      "Student dashboards, lessons, certificates, and progress tracking.",
-  },
-  {
-    q: "4",
-    title: "Execution",
-    detail:
-      "Open instructor applications, native community, and paid plans.",
-  },
-  {
-    q: "5",
-    title: "Reports",
-    detail:
-      "Open instructor applications, native community, and paid plans.",
-  },
-];
+import Reveal from "@/components/Reveal";
+import Fill from "@/components/Fill";
+import { button, container, displayHeading, sectionHeading } from "@/components/ui";
+import {
+  certifications,
+  education,
+  experience,
+  languages,
+  links,
+  site,
+  skills,
+} from "@/content/portfolio";
 
 const About = () => {
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
-
-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center md:py-32">
-
-          <h1 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-6xl">
-            Meet {" "}
-            <span className="text-gradient">Aduragemi Aleem</span>
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Adura is a Africa&apos;s next generation of digital professionals by
-            making world-class, practical digital skills accessible,
-            structured, and career-ready.
-          </p>
-        </div>
-      </section>
-
-      <Section eyebrow="ME" title="How I Got Here.">
-        <div className="grid items-center gap-10 md:grid-cols-[1fr_2fr]">
-          <Image
-            src="/images/ADR.jpeg"
-            alt="ADR"
-            width={768}
-            height={896}
-            className="aspect-[4/5] w-full rounded-2xl border border-border object-cover"
-          />
-
-          <div className="space-y-4 text-lg text-muted-foreground">
-            <p>
-              Hi, I&apos;m{" "}
-              <span className="font-semibold text-foreground">
-                Aduragbemi Aleem
-              </span>{" "}
-              , an AI Content Integrator.
+      <section className={`${container} flex flex-col gap-10 py-12 md:flex-row md:gap-14 md:py-20`}>
+        <div className="min-w-0 md:flex-[3]">
+          <h1 className={`${displayHeading} mb-7`}>About me</h1>
+          <div className="space-y-4">
+            <p className="text-lg md:text-[19px]">
+              Most tech products don&apos;t struggle because they lack innovation. They struggle
+              because people don&apos;t understand them, and increasingly, because AI tools like
+              ChatGPT and Google AI Overviews don&apos;t understand them either.
             </p>
-
-            <p>
-              I&apos;ve spent the last few years inside the AI content stack —
-              building, integrating, and teaching the workflows that creators
-              and brands use to ship at speed.
+            <p className="text-muted-foreground">
+              I&apos;m an SEO, AEO and GEO strategist. For <Fill value={site.yearsOfExperience} />{" "}
+              years I&apos;ve written and managed content for fintech, Web3 and AI companies, with
+              one goal: making sure the right people find the product, whether they search on
+              Google or ask a chatbot.
             </p>
-
-            <p>
-              Everywhere I looked, I saw the same gap: schools weren&apos;t
-              teaching digital skills, and online courses weren&apos;t built for
-              African realities. So I&apos;m building the academy I wish existed
-              — practical, AI-first, mentor-led, and structured for real-life
-              careers.
+            <p className="text-muted-foreground">
+              I&apos;ve also worked on the other side of AI. As a co-author of Eng-PidginEdu, I
+              helped build the data pipeline behind an English–Nigerian Pidgin translation dataset,
+              from scraping and cleaning text in Python to reviewing model output by hand. That
+              work showed me how language models process text, which is what AEO and GEO depend on.
             </p>
           </div>
         </div>
-      </Section>
+        <div className="min-w-0 md:flex-[2]">
+          <Image
+            src="/images/ADR.jpeg"
+            alt={`Portrait of ${site.name}`}
+            width={720}
+            height={1080}
+            sizes="(min-width: 768px) 40vw, 100vw"
+            className="aspect-[4/5] max-h-[440px] w-full rounded-2xl border border-border object-cover object-top"
+          />
+        </div>
+      </section>
 
-      <Section eyebrow="Commitment" title="The things I do.">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {philosophy.map((item) => (
-            <div key={item.title} className="surface-card p-6">
-              <item.icon className="h-6 w-6 text-accent2" />
+      <Reveal>
+        <section className={`${container} py-8 md:py-12`}>
+          <h2 className={`${sectionHeading} mb-6`}>Experience</h2>
+          <ol className="border-t border-border">
+            {experience.map((e) => (
+              <li
+                key={`${e.org}-${e.dates}`}
+                className="flex flex-col gap-1 border-b border-border py-5 md:flex-row md:gap-8"
+              >
+                <span className="pt-0.5 font-mono text-sm text-muted-foreground md:w-52 md:shrink-0">
+                  {e.dates}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold">
+                    <Fill value={e.role} /> · {e.org}
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">{e.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </Reveal>
 
-              <h3 className="mt-4 font-display text-base font-semibold">
-                {item.title}
-              </h3>
+      <Reveal>
+        <section className={`${container} py-8 md:py-12`}>
+          <h2 className={`${sectionHeading} mb-7`}>Skills</h2>
+          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {skills.map((s) => (
+              <div key={s.title} className="border-t-2 border-foreground pt-4">
+                <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
+                <p className="text-muted-foreground">{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </Reveal>
 
-              <p className="mt-2 text-sm text-muted-foreground">
-                {item.desc}
+      <Reveal>
+        <section className={`${container} grid gap-10 py-8 md:grid-cols-3 md:py-12`}>
+          <div>
+            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Education</h2>
+            <p className="font-semibold">{education.degree}</p>
+            <p className="text-muted-foreground">{education.school}</p>
+          </div>
+          <div>
+            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Certifications</h2>
+            <ul className="list-disc pl-5 text-muted-foreground">
+              {certifications.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="mb-4 font-display text-2xl font-bold md:text-[1.75rem]">Languages</h2>
+            <p className="text-muted-foreground">
+              {languages.map((l, i) => (
+                <Fill key={i} value={l} />
+              ))}
+            </p>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Kept from the previous About page at the owner's request. */}
+      <Reveal>
+        <section className={`${container} pb-16 pt-8 md:pb-24 md:pt-12`}>
+          <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-6 md:flex-row md:items-center md:justify-between md:p-10">
+            <div>
+              <h2 className="font-display text-2xl font-bold">Partner With Us</h2>
+              <p className="mt-2 max-w-xl text-muted-foreground">
+                Support what we do by making a donation. Thank you for being part of the journey.
               </p>
             </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section eyebrow="Roadmap" title="Move From Here to There.">
-        <ol className="relative space-y-6 border-l border-border pl-8">
-          {roadmap.map((item) => (
-            <li key={item.q} className="surface-card relative p-6">
-              <span className="absolute -left-[2.6rem] top-6 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-brand-foreground shadow-glow">
-                {item.q}
-              </span>
-
-              <h3 className="font-display text-lg font-semibold">
-                {item.title}
-              </h3>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                {item.detail}
-              </p>
-            </li>
-          ))}
-        </ol>
-      </Section>
-
-      <Section
-        eyebrow="Financial Box"
-        title="Partner With Us"
-        subtitle="Support what we do by making a donation. Thank you for being part of the journey."
-      >
-        <Link
-          href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem!%20I%20want%20to%20support%20what%20you%20do.%20Can%20you%20tell%20me%20how%20I%20can%20help%3F"
-  target="_blank"
-  rel="noopener noreferrer"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow"
-        >
-          Be a Part of Our Growth
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </Section>
-
-      
+            <a
+              href={links.whatsappSupport}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${button({ variant: "outline", size: "md" })} shrink-0`}
+            >
+              Be a Part of Our Growth <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+      </Reveal>
     </>
   );
 };

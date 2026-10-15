@@ -63,69 +63,85 @@
   --color-accent2: var(--accent2);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-soft: var(--brand-soft);
+  --color-placeholder: var(--placeholder);
+  --color-placeholder-foreground: var(--placeholder-foreground);
+  /* Font families come from next/font variables set on <html> in app/layout.tsx */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, monospace;
 }
 
 :root {
-  /* ADR Hub — Burgundy-dominant design system */
+  /* Portfolio redesign — light ground, ink text, deep green accent.
+     Token NAMES are unchanged so every existing utility keeps working;
+     only the values changed. Contrast checked: body text 7.9:1,
+     accent text 7.8:1, white on accent 8.1:1, input borders 3.3:1. */
   --radius: 0.875rem;
 
   /* Base surfaces */
-  --background: oklch(0.16 0.03 15);
-  --foreground: oklch(0.96 0.005 60);
-  --surface: oklch(0.24 0.05 15);
-  --surface-elevated: oklch(0.30 0.07 15);
+  --background: oklch(0.984 0.004 106.5);
+  --foreground: oklch(0.204 0.007 258.4);
+  --surface: oklch(1 0 0);
+  --surface-elevated: oklch(0.956 0.007 115.7);
 
-  /* Secondary: white/cream cards */
-  --card: oklch(0.995 0.003 60);
-  --card-foreground: oklch(0.18 0.04 15);
-  --popover: oklch(0.995 0.003 60);
-  --popover-foreground: oklch(0.18 0.04 15);
+  /* Cards */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.204 0.007 258.4);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.204 0.007 258.4);
 
-  /* Brand: burgundy */
-  --brand: oklch(0.48 0.18 15);
-  --brand-foreground: oklch(0.99 0.003 60);
+  /* Brand: deep green */
+  --brand: oklch(0.42 0.075 174.2);
+  --brand-dark: oklch(0.324 0.056 174.8);
+  --brand-soft: oklch(0.946 0.012 170.3);
+  --brand-foreground: oklch(1 0 0);
 
-  /* Accent: warm gold */
-  --accent2: oklch(0.78 0.12 75);
+  /* Eyebrows and icon accents (previously gold) */
+  --accent2: oklch(0.42 0.075 174.2);
 
-  --primary: oklch(0.99 0.003 60);
-  --primary-foreground: oklch(0.18 0.04 15);
-  --secondary: oklch(0.28 0.07 15);
-  --secondary-foreground: oklch(0.96 0.005 60);
-  --muted: oklch(0.28 0.05 15);
-  --muted-foreground: oklch(0.60 0.03 20);
-  --accent: oklch(0.35 0.08 15);
-  --accent-foreground: oklch(0.96 0.005 60);
+  --primary: oklch(0.204 0.007 258.4);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.956 0.007 115.7);
+  --secondary-foreground: oklch(0.204 0.007 258.4);
+  --muted: oklch(0.956 0.007 115.7);
+  --muted-foreground: oklch(0.426 0.015 259.8);
+  --accent: oklch(0.946 0.012 170.3);
+  --accent-foreground: oklch(0.324 0.056 174.8);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.40 0.05 15);
-  --input: oklch(0.24 0.04 15);
-  --ring: oklch(0.78 0.12 75);
+  --border: oklch(0.917 0.007 115.7);
+  --input: oklch(0.637 0.015 124);
+  --ring: oklch(0.42 0.075 174.2);
 
-  --chart-1: oklch(0.48 0.18 15);
-  --chart-2: oklch(0.78 0.12 75);
-  --chart-3: oklch(0.65 0.16 20);
-  --chart-4: oklch(0.85 0.06 30);
-  --chart-5: oklch(0.32 0.08 15);
+  /* Fill-in markers for unfinished content */
+  --placeholder: oklch(0.96 0.05 89.8);
+  --placeholder-foreground: oklch(0.399 0.082 84.4);
 
-  --sidebar: oklch(0.20 0.04 15);
-  --sidebar-foreground: oklch(0.90 0.02 30);
-  --sidebar-primary: oklch(0.48 0.18 15);
-  --sidebar-primary-foreground: oklch(0.99 0.003 60);
-  --sidebar-accent: oklch(0.28 0.06 15);
-  --sidebar-accent-foreground: oklch(0.96 0.005 60);
-  --sidebar-border: oklch(0.35 0.05 15);
-  --sidebar-ring: oklch(0.78 0.12 75);
+  --chart-1: oklch(0.42 0.075 174.2);
+  --chart-2: oklch(0.65 0.12 60);
+  --chart-3: oklch(0.55 0.1 250);
+  --chart-4: oklch(0.75 0.08 140);
+  --chart-5: oklch(0.32 0.05 174.8);
 
-  /* Gradients & effects */
-  --gradient-brand: linear-gradient(135deg, oklch(0.42 0.16 15) 0%, oklch(0.62 0.16 22) 100%);
-  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.55 0.16 15 / 0.35), transparent 60%);
-  --gradient-surface: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.97 0.008 50) 100%);
-  --shadow-glow: 0 8px 40px oklch(0.85 0.06 30 / 0.20);
-  --shadow-card: 0 8px 32px oklch(0.10 0.02 15 / 0.45);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.204 0.007 258.4);
+  --sidebar-primary: oklch(0.42 0.075 174.2);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.956 0.007 115.7);
+  --sidebar-accent-foreground: oklch(0.204 0.007 258.4);
+  --sidebar-border: oklch(0.917 0.007 115.7);
+  --sidebar-ring: oklch(0.42 0.075 174.2);
+
+  /* Effects — flattened for the cleaner look. The utilities that use these
+     (bg-gradient-brand, text-gradient, bg-hero-glow, shadow-glow, surface-card)
+     are kept so the Services and Community pages restyle without edits. */
+  --gradient-brand: linear-gradient(var(--brand), var(--brand));
+  --gradient-hero: none;
+  --gradient-surface: linear-gradient(var(--card), var(--card));
+  --shadow-glow: 0 1px 2px oklch(0.204 0.007 258.4 / 0.08);
+  --shadow-card: 0 1px 3px oklch(0.204 0.007 258.4 / 0.08);
 }
 
 .dark {
@@ -160,7 +176,7 @@
   height: 44px;
   width: 100%;
   border-radius: 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-input);
   background: var(--surface);
   padding: 0 14px;
   color: var(--color-foreground);
@@ -180,7 +196,7 @@ textarea.input {
 .input:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgb(255 193 7 / 20%);
+  box-shadow: 0 0 0 3px oklch(0.42 0.075 174.2 / 0.25);
 }
 
 @utility text-gradient {

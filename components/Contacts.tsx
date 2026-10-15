@@ -2,26 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useForm } from "@formspree/react";
-import type { Metadata } from "next";
-import {
-  Calendar,
-  Send,
-  Check,
-} from "lucide-react";
+import { Calendar, Send, Check } from "lucide-react";
 import Section from "@/components/Section";
 import { FaInstagram, FaLinkedin, FaTiktok, FaTwitter } from "react-icons/fa6";
+import { button, container, displayHeading, label } from "@/components/ui";
+import { links, site } from "@/content/portfolio";
 
-
-
-export const metadata: Metadata = {
-  title: "Contact | Aleem Aduragbemi",
-  description:
-    "Let's discuss your project, career goals, or business needs.",
-  openGraph: {
-    title: "Contact Aleem Aduragbemi",
-    description: "Get in touch for collaborations, consulting, or coaching.",
-  },
-};
+// Page metadata now lives in app/contact/page.tsx. Next.js ignored it here,
+// because metadata is only read from page and layout files.
 
 const faqs = [
   {
@@ -42,11 +30,19 @@ const faqs = [
   },
 ];
 
-export default function ContactPage() {
- const [state, handleSubmit] = useForm("xaqrejbv");
-   const formRef = useRef<HTMLFormElement>(null);
+const socials = [
+  { icon: FaLinkedin, label: "LinkedIn", href: links.linkedin },
+  { icon: FaInstagram, label: "Instagram", href: links.instagram },
+  { icon: FaTiktok, label: "TikTok", href: links.tiktok },
+  { icon: FaTwitter, label: "Twitter / X", href: links.x },
+];
 
-     useEffect(() => {
+export default function ContactPage() {
+  // Unchanged: same Formspree form ID, same field names, same states.
+  const [state, handleSubmit] = useForm("xaqrejbv");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
     if (state.succeeded) {
       formRef.current?.reset();
     }
@@ -54,220 +50,147 @@ export default function ContactPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-hero-glow" />
-
-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center md:py-28">
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent2">
-            Contact
+      <section className={`${container} grid gap-12 py-12 md:grid-cols-2 md:gap-16 md:py-20`}>
+        <div className="min-w-0">
+          <h1 className={`${displayHeading} mb-5`}>Let&apos;s talk</h1>
+          <p className="mb-8 text-lg text-muted-foreground md:text-[19px]">
+            I&apos;m open to SEO, content strategy and AI-search roles at tech and AI companies.
+            I&apos;m also available for selected freelance projects, collaborations and coaching.
           </p>
 
-          <h1 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-6xl">
-            Let&apos;s <span className="text-gradient">work together.</span>
-          </h1>
+          <dl className="mb-8 flex flex-col gap-4">
+            <div>
+              <dt className={label}>Email</dt>
+              <dd>
+                <a
+                  href={`mailto:${site.email}`}
+                  className="break-all text-lg font-semibold text-brand hover:text-brand-dark"
+                >
+                  {site.email}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className={label}>Location</dt>
+              <dd className="text-lg font-semibold">{site.location} · open to remote</dd>
+            </div>
+          </dl>
 
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-            Whether you need AI integration, content strategy, SEO support,
-            career coaching, or simply want to discuss an idea, I &apos;d love to hear
-            from you.
-          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={links.whatsappCall}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={button({ variant: "outline", size: "md" })}
+            >
+              <Calendar className="h-4 w-4" aria-hidden="true" />
+              Book a discovery call
+            </a>
+            {site.cvPath && (
+              <a href={site.cvPath} download className={button({ variant: "dark", size: "md" })}>
+                Download CV
+              </a>
+            )}
+          </div>
+
+          <h2 className="mb-3 mt-10 font-display text-lg font-bold">Connect with me</h2>
+          <ul className="grid grid-cols-2 gap-2">
+            {socials.map((social) => (
+              <li key={social.label}>
+                {/* target/rel were defined but never applied before; now they are. */}
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:border-brand"
+                >
+                  <social.icon className="h-4 w-4 text-brand" aria-hidden="true" />
+                  {social.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
+
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="flex min-w-0 flex-col gap-4 self-start rounded-2xl border border-border bg-surface p-6 md:p-9"
+        >
+          <h2 className="font-display text-2xl font-bold">Send a message</h2>
+
+          <Field label="Name">
+            <input required type="text" name="name" autoComplete="name" className="input" placeholder="Your name" />
+          </Field>
+
+          <Field label="Email">
+            <input
+              required
+              type="email"
+              name="email"
+              autoComplete="email"
+              className="input"
+              placeholder="your@email.com"
+            />
+          </Field>
+
+          {/* Field name stays "service" so Formspree submissions keep the same shape. */}
+          <Field label="Topic">
+            <select className="input" name="service" required defaultValue="">
+              <option value="" disabled>
+                Select a topic
+              </option>
+              <option>Job opportunity</option>
+              <option>General Inquiry</option>
+              <option>AI Human Integration</option>
+              <option>SEO / GEO / AEO</option>
+              <option>Content Marketing</option>
+              <option>Career Coaching</option>
+              <option>Collaboration</option>
+            </select>
+          </Field>
+
+          <Field label="Message">
+            <textarea
+              required
+              rows={5}
+              name="message"
+              className="input resize-y"
+              placeholder="Tell me about the role, project or goal..."
+            />
+          </Field>
+
+          {state.succeeded ? (
+            <div
+              role="status"
+              className="flex items-center gap-2 rounded-xl border border-border bg-brand-soft px-4 py-3 text-sm text-accent-foreground"
+            >
+              <Check className="h-5 w-5" aria-hidden="true" />
+              Thanks! Your message has been received.
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={state.submitting}
+              className={`${button({ variant: "primary" })} self-start`}
+            >
+              {state.submitting ? "Sending..." : "Send message"}
+              <Send className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </form>
       </section>
 
-      <Section>
-        <div className="grid gap-8 md:grid-cols-2">
-          <form
-            ref={formRef}
-            onSubmit={handleSubmit}
-            className="surface-card flex flex-col gap-4 p-8"
-          >
-            <h2 className="font-display text-xl font-bold">
-              Send a Message
-            </h2>
-
-            <Field label="Name">
-              <input
-  required
-  type="text"
-  name="name"
-  className="input"
-  placeholder="Your name"
-/>
-            </Field>
-
-            <Field label="Email">
-              <input
-  required
-  type="email"
-  name="email"
-  className="input"
-  placeholder="your@email.com"
-/>
-            </Field>
-
-            <Field label="Service">
-             <select
-  className="input"
-  name="service"
-  required
-  defaultValue=""
->
-                <option value="" disabled>
-  Select a service
-</option>
-                <option>General Inquiry</option>
-                <option>AI Human Integration</option>
-                <option>SEO / GEO / AEO</option>
-                <option>Content Marketing</option>
-                <option>Career Coaching</option>
-                <option>Collaboration</option>
-              </select>
-            </Field>
-
-            <Field label="Message">
-             <textarea
-  required
-  rows={5}
-  name="message"
-  className="input resize-y"
-  placeholder="Tell me about your project or goals..."
-/>
-            </Field>
-  
-  {state.succeeded ? (        
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-foreground">
-                <Check className="h-5 w-5 text-accent2" />
-                Thanks! Your message has been received.
-              </div>
-            ) : (
-              <button
-  type="submit"
-  disabled={state.submitting}
-  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-6 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
->
-                {state.submitting ? "Sending..." : "Send Message"}
-                <Send className="h-4 w-4" />
-              </button>
-            )}
-          </form>
-
-          <div className="space-y-6">
-            <div className="surface-card p-8">
-              <Calendar className="h-6 w-6 text-accent2" />
-
-              <h2 className="mt-4 font-display text-xl font-bold">
-                Book a Discovery Call
-              </h2>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                Schedule a one-on-one session to discuss your business,
-                career goals, or digital strategy.
-              </p>
-
-              <a
-  href="https://wa.me/2348109656603?text=Hi%20Aduragbemi%20Aleem,%20I'd%20like%20to%20book%20a%20discovery%20call."
-  target="_blank"
-  rel="noopener noreferrer"
-  className="mt-5 inline-flex h-12 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-elevated"
->
-  Book a Call
-</a>
-            </div>
-
-            <div className="surface-card p-8">
-              <h2 className="font-display text-xl font-bold">
-                Connect With Me
-              </h2>
-
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {[
-        
-                  {
-                    icon: FaLinkedin,
-                    label: "LinkedIn",
-                    href: "https://www.linkedin.com/in/aduragbemialeem",
-                    target: "_blank",
-                    rel:"noopener noreferrer"
-                  },
- {
-                    icon: FaInstagram,
-                    label: "Instagram",
-                    href: "https://www.instagram.com/a_aduragbemi/",
-                    target: "_blank",
-                    rel: "noopener noreferrer"
-                  },
-
-                  { icon: FaTiktok, label: "TikTok", 
-                    href:"https://www.tiktok.com/@the_beanie_guy",
-                    target: "_blank",
-                    rel: "noopener noreferrer"
-                   },
-
-                 
-
-                   { icon: FaTwitter, label: "Twitter / X" , 
-                    href: "https://x.com/Aduragbemi_AE",
-                    target: "_blank",
-                    rel: "noopener noreferrer"
-                   }
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground hover:bg-surface-elevated"
-                  >
-                    <social.icon className="h-4 w-4 text-accent2" />
-                    {social.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      <Section eyebrow="FAQ" title="Frequently Asked Questions">
-        <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface/40">
+      <Section eyebrow="FAQ" title="Frequently asked questions" align="center">
+        <div className="mx-auto max-w-3xl divide-y divide-border rounded-2xl border border-border bg-surface">
           {faqs.map((faq) => (
             <div key={faq.q} className="px-6 py-5">
-              <p className="font-display text-base font-semibold">
-                {faq.q}
-              </p>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                {faq.a}
-              </p>
+              <p className="font-display text-base font-semibold">{faq.q}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{faq.a}</p>
             </div>
           ))}
         </div>
       </Section>
-
-      <style jsx>{`
-        .input {
-          height: 44px;
-          width: 100%;
-          border-radius: 12px;
-          border: 1px solid var(--color-border);
-          background: var(--surface);
-          padding: 0 14px;
-          color: var(--color-foreground);
-          font-size: 14px;
-        }
-
-        textarea.input {
-          height: auto;
-        }
-
-        .input::placeholder {
-          color: var(--color-muted-foreground);
-        }
-
-        .input:focus {
-          outline: none;
-          border-color: var(--brand);
-          box-shadow: 0 0 0 3px oklch(0.78 0.12 75 / 0.35);
-        }
-      `}</style>
     </>
   );
 }
@@ -277,12 +200,10 @@ type FieldProps = {
   children: React.ReactNode;
 };
 
-function Field({ label, children }: FieldProps) {
+function Field({ label: text, children }: FieldProps) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-sm font-semibold">{text}</span>
       {children}
     </label>
   );
